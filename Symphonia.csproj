@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWPF>true</UseWPF>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="EPIC XI morgana.jpg" />
+    <None Remove="images\folder.png" />
+    <None Remove="images\goleft.png" />
+    <None Remove="images\goright.png" />
+    <None Remove="images\pause.png" />
+    <None Remove="images\play.png" />
+    <None Remove="images\repeatoff.png" />
+    <None Remove="images\repeaton.png" />
+    <None Remove="images\shuffle.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <COMReference Include="Microsoft.Vbe.Interop.Forms">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>2</VersionMajor>
+      <Guid>0d452ee1-e08f-101a-852e-02608c4d0bb4</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="EPIC XI morgana.jpg" />
+    <Resource Include="images\folder.png" />
+    <Resource Include="images\goleft.png" />
+    <Resource Include="images\goright.png" />
+    <Resource Include="images\pause.png" />
+    <Resource Include="images\play.png" />
+    <Resource Include="images\repeatoff.png" />
+    <Resource Include="images\repeaton.png" />
+    <Resource Include="images\shuffle.png" />
+  </ItemGroup>
+
+</Project>
