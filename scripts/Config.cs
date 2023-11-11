@@ -25,6 +25,12 @@ namespace Symphonia.scripts
         {
             string filePath = Path.Combine(ConfigPath, "config.json");
 
+            // if file path doesn't exist create the directory
+            if (!Directory.Exists(ConfigPath))
+            {
+                Directory.CreateDirectory(ConfigPath);
+            }
+
             if (File.Exists(filePath))
             {
                 string json = File.ReadAllText(filePath);
