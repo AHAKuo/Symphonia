@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -33,6 +34,7 @@ namespace Symphonia.scripts
         #endregion
 
         public static AudioFileReader CurrentPlayingFileReader;
+        private static VolumeSampleProvider volumeProvider;
         public static WaveOutEvent CurrentPlayingEvent = new()
         {
             Volume = CurrentSongVolume
@@ -57,13 +59,19 @@ namespace Symphonia.scripts
         {
             try
             {
-                CurrentPlayingEvent = new();
-                CurrentPlayingFileReader = new AudioFileReader(CurrentPlaylist.CurrentSongFilePath); // Reads the mp3 file
-                CurrentPlayingEvent.Init(CurrentPlayingFileReader);
-                CurrentPlayingFileReader.Volume = CurrentSongVolume;
-                CurrentPlayingEvent.Play();
+                ClearCurrentPlayer();
+                CurrentPlayingEvent = new WaveOutEvent();
 
-                // add continue event
+                CurrentPlayingFileReader = new AudioFileReader(CurrentPlaylist.CurrentSongFilePath);
+
+                // Apply volume adjustment
+                volumeProvider = new(CurrentPlayingFileReader.ToSampleProvider())
+                {
+                    Volume = CalculateAdjustedVolume()
+                };
+
+                CurrentPlayingEvent.Init(volumeProvider);
+                CurrentPlayingEvent.Play();
 
                 CurrentPlayingEvent.PlaybackStopped += (sender, e) =>
                 {
@@ -72,11 +80,11 @@ namespace Symphonia.scripts
 
                 OnHasPlayed?.Invoke();
 
-                // Wait for the file to finish playing
-                while (IsPlaying
-                    || IsPaused)
+                while (IsPlaying || IsPaused)
                 {
                     await Task.Delay(100);
+                    // also make sure volume is adjusted
+                    volumeProvider.Volume = CalculateAdjustedVolume();
                     OnUpdate?.Invoke();
                 }
 
@@ -86,6 +94,11 @@ namespace Symphonia.scripts
             {
                 Console.WriteLine("An error occurred while playing the file: " + ex.Message);
             }
+        }
+
+        private static float CalculateAdjustedVolume()
+        {
+            return CurrentSongVolume * 10;
         }
 
         #region Player Methods

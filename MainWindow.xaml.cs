@@ -3,11 +3,15 @@ using Symphonia.external;
 using Symphonia.scripts;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using static Symphonia.scripts.Config;
 using static Symphonia.scripts.Defaults;
 using static Symphonia.scripts.MusicPlayer;
@@ -56,6 +60,69 @@ namespace Symphonia
         /// </summary>
         private void InitEvents()
         {
+            Topbar.MouseLeftButtonDown += (sender, e) =>
+            {
+                if (e.LeftButton == MouseButtonState.Pressed)
+                {
+                    this.DragMove();
+                }
+            };
+
+            CloseWindowButton.Click += (sender, e) =>
+            {
+                IsEnabled = false;
+                CurrentPlayingFileReader?.Dispose();
+                CurrentPlayingEvent?.Dispose();
+
+                // Animations for opacity
+                var animOpacityOut = new DoubleAnimation(0, TimeSpan.FromSeconds(0.15));
+                var animOpacityIn = new DoubleAnimation(1, TimeSpan.FromSeconds(0));
+
+                // Animations for scale
+                var animScaleOut = new DoubleAnimation(0, TimeSpan.FromSeconds(0.15));
+                var animScaleIn = new DoubleAnimation(1, TimeSpan.FromSeconds(0));
+
+                // Set the animation to run when completed.
+                animOpacityOut.Completed += (s, _) =>
+                {
+                    Close();
+                };
+
+                // Start the animations.
+                this.BeginAnimation(UIElement.OpacityProperty, animOpacityOut);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleOut);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleOut);
+            };
+
+            MinimizeWindowButton.Click += (sender, e) =>
+            {
+                IsEnabled = false;
+
+                // Animations for opacity
+                var animOpacityOut = new DoubleAnimation(0, TimeSpan.FromSeconds(0.15));
+                var animOpacityIn = new DoubleAnimation(1, TimeSpan.FromSeconds(0));
+
+                // Animations for scale
+                var animScaleOut = new DoubleAnimation(0, TimeSpan.FromSeconds(0.15));
+                var animScaleIn = new DoubleAnimation(1, TimeSpan.FromSeconds(0));
+
+                // Set the animation to run when completed.
+                animOpacityOut.Completed += (s, _) =>
+                {
+                    this.WindowState = WindowState.Minimized;
+                    IsEnabled = true;
+
+                    // Reset animations
+                    this.BeginAnimation(UIElement.OpacityProperty, animOpacityIn);
+                    scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleIn);
+                    scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleIn);
+                };
+
+                // Start the animations.
+                this.BeginAnimation(UIElement.OpacityProperty, animOpacityOut);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleOut);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleOut);
+            };
             SetPathButton.Click += (sender, e) => SetMusicPath();
             MusicControlButton_1.Click += (sender, e) => PauseOrPlay(UpdateAll);
             MusicControlButton_3.Click += (sender, e) => ShuffleAll();
@@ -271,8 +338,6 @@ namespace Symphonia
 
             CurrentSongVolume = (float)VolumeBar.Value;
 
-            CurrentPlayingFileReader.Volume = CurrentSongVolume;
-
             UpdateConfigs();
         }
 
@@ -315,9 +380,21 @@ namespace Symphonia
 
         private void UpdateConfigs() 
         {
-            Topmost = Topmost;
-            Height = currentWindowMode == CurrentWindowMode.Collapsed ? collapsedHeight : normalHeight;
-            SaveConfig();
+            CurrentlyTopMost = Topmost;
+
+            // Determine the target height
+            double targetHeight = currentWindowMode == CurrentWindowMode.Collapsed ? collapsedHeight : normalHeight;
+
+            // Create and configure the height animation
+            var heightAnimation = new DoubleAnimation
+            {
+                To = targetHeight,
+                Duration = TimeSpan.FromSeconds(0.2), // Duration of 0.5 seconds, adjust as needed
+                                                      // You can set other properties like acceleration or deceleration here if desired
+            };
+
+            // Apply the animation to the Height property
+            this.BeginAnimation(Window.HeightProperty, heightAnimation); SaveConfig();
         }
         #endregion
 

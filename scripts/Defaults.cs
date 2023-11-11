@@ -18,10 +18,10 @@ namespace Symphonia.scripts
         #region Strict Settings
         public const int maxPlaylistSize = 50;
         public const int maxTimeBeforePreviousPlay = 5; // time in seconds before we restart the song instead of going to the previous one
-        public const double collapsedHeight = 270; // time in seconds before we restart the song instead of going to the previous one
+        public const double collapsedHeight = 310; // time in seconds before we restart the song instead of going to the previous one
         public const double normalHeight = 500; // time in seconds before we restart the song instead of going to the previous one
         public const string defaultMusicLabel = "Not Playing...";
-        public const string defaultFont = "Euphorigenic";
+        public const string defaultFont = "Times New Roman";
         public const string defaultMessageBoxCaption = "Symphonia";
         public static string[] supportedFormats = new string[] { "*.mp3", "*.wav" };
         #endregion

@@ -11,9 +11,11 @@
     <Title>Symphonia</Title>
     <ApplicationIcon>images\icon.ico</ApplicationIcon>
     <StartupObject>Symphonia.App</StartupObject>
+    <Company>AHAlwagdani</Company>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="images\close.png" />
     <None Remove="images\cog.png" />
     <None Remove="images\collapse.png" />
     <None Remove="images\EPIC XI morgana.jpg" />
@@ -22,6 +24,7 @@
     <None Remove="images\goleft.png" />
     <None Remove="images\goright.png" />
     <None Remove="images\icon.ico" />
+    <None Remove="images\minimize.png" />
     <None Remove="images\pause.png" />
     <None Remove="images\play.png" />
     <None Remove="images\repeatoff.png" />
@@ -54,9 +57,11 @@
 
   <ItemGroup>
     <Folder Include="external\" />
+    <Folder Include="prefabs\" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="images\close.png" />
     <Resource Include="images\cog.png" />
     <Resource Include="images\collapse.png" />
     <Resource Include="images\EPIC XI morgana.jpg" />
@@ -70,6 +75,7 @@
     <Resource Include="images\icon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="images\minimize.png" />
     <Resource Include="images\pause.png" />
     <Resource Include="images\play.png" />
     <Resource Include="images\repeatoff.png" />

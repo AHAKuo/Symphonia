@@ -4,8 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Symphonia" 
+        xmlns:shell="http://schemas.microsoft.com/netfx/2009/xaml/presentation"
         mc:Ignorable="d"
-        Title="Symphonia" Icon="images/icon.png" ResizeMode="CanMinimize" Width="338" Height="500" MaxHeight="500" MinWidth="338" MinHeight="200" FontFamily="Euphorigenic" WindowStartupLocation="CenterScreen" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#FF151515" Closed="Main_Closed" GotFocus="Main_GotFocus">
+        Title="Symphonia" Icon="images/icon.png" Topmost="True" ResizeMode="NoResize" Width="338" Height="550" FontFamily="Times New Roman" WindowStartupLocation="CenterScreen" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Closed="Main_Closed" GotFocus="Main_GotFocus" WindowStyle="None" AllowsTransparency="True" RenderTransformOrigin="0.5,0.5">
+
+    <WindowChrome.WindowChrome>
+        <shell:WindowChrome CornerRadius="50" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <!-- Button Style -->
@@ -22,66 +27,125 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
+    <Window.RenderTransform>
+        <TransformGroup>
+            <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+            <SkewTransform/>
+            <RotateTransform/>
+            <TranslateTransform/>
+        </TransformGroup>
+    </Window.RenderTransform>
+    <Window.Background>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="Black"/>
+            <GradientStop Color="#FF2F141A" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
+    <Window.Effect>
+        <DropShadowEffect ShadowDepth="15" BlurRadius="10"/>
+    </Window.Effect>
+    <Window.BorderBrush>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="Black" Offset="0.002"/>
+            <GradientStop Color="#FFD60045" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.BorderBrush>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="32"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="32"/>
-        </Grid.ColumnDefinitions>
+    <Border Width="Auto" Height="Auto" BorderThickness="5" CornerRadius="24">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="1" Direction="0"/>
+        </Border.Effect>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="64"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="16"/>
-        </Grid.RowDefinitions>
+        <Border.BorderBrush>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FFD06150"/>
+                <GradientStop Color="#FFED0036" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.BorderBrush>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="32"/>
+            </Grid.ColumnDefinitions>
 
-        <Button x:Name="ConfigButton" Grid.Column="0" Grid.Row="0" Background="#FF6B6B6B" BorderBrush="{x:Null}" Height="20" Width="20" Margin="5">
-            <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/cog.png" Height="Auto" Width="Auto" Margin="2"/>
-        </Button>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="16"/>
+            </Grid.RowDefinitions>
 
-        <UniformGrid x:Name="Toolbar" Grid.Column="1" VerticalAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Center" Rows="1" Columns="3" Width="256">
-            <Button x:Name="SetPathButton" Background="#FF3D8C57" BorderBrush="{x:Null}" Height="20" Width="20" Margin="5">
-                <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/folder.png" Height="Auto" Width="Auto" Margin="2"/>
+            <Image x:Name="Icon" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15" MinWidth="0" MinHeight="0" Source="/images/icon.png" Height="55" Width="55" Grid.RowSpan="4" Grid.ColumnSpan="2"/>
+
+            <StackPanel x:Name="WindowToolbar" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="Auto" FlowDirection="RightToLeft" Background="Black" Orientation="Horizontal">
+                <Button x:Name="CloseWindowButton" Background="#FFC82727" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
+                    <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/close.png" Height="Auto" Width="Auto" Margin="2"/>
+                </Button>
+                <Button x:Name="MinimizeWindowButton" Background="#FF25584D" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
+                    <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/minimize.png" Height="Auto" Width="Auto" Margin="2"/>
+                </Button>
+                <Button x:Name="ConfigButton" Background="#FF6B6B6B" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
+                    <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/cog.png" Height="Auto" Width="Auto" Margin="2"/>
+                </Button>
+                <Button x:Name="SetPathButton" Background="#FF223C65" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
+                    <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/folder.png" Height="Auto" Width="Auto" Margin="2"/>
+                </Button>
+            </StackPanel>
+
+            <Border x:Name="Topbar" Grid.Column="1" Grid.Row="0" Margin="20,1,20,1" Width="Auto" Height="Auto">
+                <Border.Background>
+                    <SolidColorBrush Color="Black" Opacity="0"/>
+                </Border.Background>
+            </Border>
+
+            <TextBox x:Name="InputBoxField" Background="Black" Foreground="#FFB3B3B3" TextAlignment="Center" FontSize="16" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="1" Margin="55,5,55,5" SelectionBrush="#FFB3123E">
+                <TextBox.BorderBrush>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF791C3A"/>
+                        <GradientStop Color="#FF943B20" Offset="1"/>
+                    </LinearGradientBrush>
+                </TextBox.BorderBrush>
+            </TextBox>
+
+            <Label x:Name="PlayingMusicLabel" Grid.Row="3" Grid.Column="1" Content="A Contest of Aeons: Testing for Length" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="32" FontFamily="Times New Roman"/>
+
+            <Label x:Name="Timestamp" Grid.Row="4" Grid.Column="1" Content="00:00:00" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="16" MinHeight="16"/>
+
+            <Image x:Name="MetaImage" Grid.Row="7" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="100" MinHeight="100" Margin="1,1,1,1" Source="/images/EPIC XI morgana.jpg"/>
+
+            <Slider x:Name="SeekBar" Grid.Column="1" Grid.Row="5" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center"/>
+
+            <Slider x:Name="VolumeBar" Grid.Column="1" Grid.Row="6" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center" TickPlacement="BottomRight" Value="-2" Maximum="1"/>
+
+            <Button x:Name="ToggleWindowMode" Background="#FF0E0D0E" BorderBrush="{x:Null}" Height="Auto" Width="Auto" Grid.Row="9" Grid.Column="1">
+                <Image x:Name="ToggleWindowModeIcon" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/collapse.png" Height="Auto" Width="Auto" Margin="2"/>
             </Button>
-            <TextBox Grid.Column="1" Grid.Row="0" Margin="-30,0,-30,0" x:Name="InputBoxField" Background="#FF353535" Foreground="#FFB3B3B3" TextAlignment="Center" FontSize="16" Width="Auto" Height="22"/>
-        </UniformGrid>
 
-        <Button x:Name="ToggleWindowMode" Background="#FFA610FF" BorderBrush="{x:Null}" Height="20" Width="20" Margin="5" Grid.Column="2">
-            <Image x:Name="ToggleWindowModeIcon" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/collapse.png" Height="Auto" Width="Auto" Margin="2"/>
-        </Button>
-
-        <Label x:Name="PlayingMusicLabel" Grid.Row="1" Grid.Column="1" Content="A Contest of Aeons" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="32"/>
-
-        <Label x:Name="Timestamp" Grid.Row="2" Grid.Column="1" Content="00:00:00" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="16" MinHeight="16"/>
-
-        <Image x:Name="MetaImage" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="100" MinHeight="100" Margin="1,1,1,1" Source="/images/EPIC XI morgana.jpg"/>
-
-        <Slider x:Name="SeekBar" Grid.Column="1" Grid.Row="3" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center"/>
-
-        <Slider x:Name="VolumeBar" Grid.Column="1" Grid.Row="4" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center" TickPlacement="BottomRight" Value="-2" Maximum="1"/>
-
-        <UniformGrid x:Name="PlayerControls" Grid.Column="1" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Center" Width="Auto" Height="Auto" Rows="1" Columns="5" Margin="5,5,5,5" MinWidth="5">
-            <Button x:Name="MusicControlButton_0" Background="#FF7D19AD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
-                <Image Source="/images/goleft.png" MaxWidth="32" MaxHeight="32" Margin="1,1,1,1" Height="Auto" Width="Auto"/>
-            </Button>
-            <Button x:Name="MusicControlButton_2" Background="#FF572ABD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
-                <Image x:Name="RepeatButtonIcon" Source="/images/repeatoff.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
-            </Button>
-            <Button x:Name="MusicControlButton_1" Background="#FFFF1454" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
-                <Image x:Name="PlayButtonIcon" Source="/images/play.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
-            </Button>
-            <Button x:Name="MusicControlButton_3" Background="#FFBF0060" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
-                <Image Source="/images/shuffle.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
-            </Button>
-            <Button x:Name="MusicControlButton_4" Background="#FF7D19AD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
-                <Image Source="/images/goright.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
-            </Button>
-        </UniformGrid>
-    </Grid>
+            <UniformGrid x:Name="PlayerControls" Grid.Column="1" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Center" Width="Auto" Height="Auto" Rows="1" Columns="5" Margin="5,5,5,5" MinWidth="5">
+                <Button x:Name="MusicControlButton_0" Background="#FF7D19AD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
+                    <Image Source="/images/goleft.png" MaxWidth="32" MaxHeight="32" Margin="1,1,1,1" Height="Auto" Width="Auto"/>
+                </Button>
+                <Button x:Name="MusicControlButton_2" Background="#FF572ABD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
+                    <Image x:Name="RepeatButtonIcon" Source="/images/repeatoff.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
+                </Button>
+                <Button x:Name="MusicControlButton_1" Background="#FFFF1454" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
+                    <Image x:Name="PlayButtonIcon" Source="/images/play.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
+                </Button>
+                <Button x:Name="MusicControlButton_3" Background="#FFBF0060" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
+                    <Image Source="/images/shuffle.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
+                </Button>
+                <Button x:Name="MusicControlButton_4" Background="#FF7D19AD" BorderBrush="{x:Null}" Margin="1" Height="Auto" Width="Auto">
+                    <Image Source="/images/goright.png" MaxWidth="32" MaxHeight="32" Height="Auto" Width="Auto" Margin="1"/>
+                </Button>
+            </UniformGrid>
+        </Grid>
+    </Border>
 </Window>
