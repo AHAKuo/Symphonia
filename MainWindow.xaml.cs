@@ -1,15 +1,13 @@
-﻿using NAudio.Wave;
+﻿using Microsoft.VisualBasic;
+using Symphonia.external;
+using Symphonia.scripts;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using TagLib;
 using static Symphonia.scripts.Config;
 using static Symphonia.scripts.Defaults;
 using static Symphonia.scripts.MusicPlayer;
@@ -29,6 +27,8 @@ namespace Symphonia
         public MainWindow()
         {
             InitializeComponent(); // from system
+
+            WindowsManager.InitAll(this);
 
             InitPlayerEvents();
 
@@ -96,11 +96,27 @@ namespace Symphonia
             MusicControlButton_2.Click += (sender, e) => ToggleRepeat(UpdateAll);
             ToggleWindowMode.Click += (sender, e) => {
                 currentWindowMode = currentWindowMode == CurrentWindowMode.Collapsed ? CurrentWindowMode.Normal : CurrentWindowMode.Collapsed;
+                UpdateImages();
                 UpdateConfigs();
             };
-            ToggleTopMost.Click += (sender, e) => {
-                CurrentlyTopMost = !CurrentlyTopMost;
-                UpdateConfigs();
+            InputBoxField.KeyDown += (sender, e) =>
+            {
+                if(e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Return)
+                {
+                    Search.SearchData searchData = new(PathToMusicFolder, InputBoxField.Text);
+                    Search.SearchQuery searchQuery = new();
+                    searchQuery.PerformSearch(async (s) =>
+                    {
+                        if (HasInited)
+                        {
+                            ClearCurrentPlayer();
+                        }
+                        CurrentPlaylist.ResetPlaylist();
+                        CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, s);
+                        await MusicPlayingTask();
+                    }, searchData, true, true, true);
+                    InputBoxField.Text = string.Empty;
+                }
             };
         }
 
@@ -131,7 +147,7 @@ namespace Symphonia
                 }
 
                 // then set the path
-                pathToMusicFolder = path;
+                PathToMusicFolder = path;
 
                 SaveFilePath();
 
@@ -142,9 +158,9 @@ namespace Symphonia
         private void SaveFilePath()
         {
             // Save the path to a text file called 'folderpath.txt'
-            string filePath = System.IO.Path.Combine(configPath, "folderpath.txt");
+            string filePath = System.IO.Path.Combine(ConfigPath, "folderpath.txt");
 
-            System.IO.File.WriteAllText(filePath, pathToMusicFolder);
+            System.IO.File.WriteAllText(filePath, PathToMusicFolder);
         }
         #endregion
 
@@ -173,6 +189,7 @@ namespace Symphonia
             PlayButtonIcon.Source = IsPausedOrNotValid ? new BitmapImage(new Uri(pathToPlay, UriKind.Relative)) : new BitmapImage(new Uri(pathToPause, UriKind.Relative));
             RepeatButtonIcon.Source = CurrentlyRepeating ? new BitmapImage(new Uri(pathToRepeatActive, UriKind.Relative)) : new BitmapImage(new Uri(pathToRepeatInActive, UriKind.Relative));
             MusicControlButton_2.Background = CurrentlyRepeating ? DefaultRepeatButtonColor : InactiveRepeatButtonColor;
+            ToggleWindowModeIcon.Source = currentWindowMode == CurrentWindowMode.Collapsed ? new BitmapImage(new Uri(pathToExpand, UriKind.Relative)) : new BitmapImage(new Uri(pathToCollapsed, UriKind.Relative));
         }
 
         private void UpdateControlsInteractivity()
@@ -186,11 +203,14 @@ namespace Symphonia
                 MusicControlButton_2,
                 MusicControlButton_3,
                 MusicControlButton_4,
-                SeekBar
+                SeekBar,
+                InputBoxField,
+                SeekBar,
+                VolumeBar
             };
 
             // then, set interactivity step 1
-            controls.ForEach(x => x.IsEnabled = !string.IsNullOrEmpty(pathToMusicFolder));
+            controls.ForEach(x => x.IsEnabled = !string.IsNullOrEmpty(PathToMusicFolder));
 
             // then, set interactivity for the play pause button
             controls[1].IsEnabled = active;
@@ -252,6 +272,8 @@ namespace Symphonia
             CurrentSongVolume = (float)VolumeBar.Value;
 
             CurrentPlayingFileReader.Volume = CurrentSongVolume;
+
+            UpdateConfigs();
         }
 
         private void UpdateTimestamp()
@@ -295,7 +317,18 @@ namespace Symphonia
         {
             Topmost = Topmost;
             Height = currentWindowMode == CurrentWindowMode.Collapsed ? collapsedHeight : normalHeight;
+            SaveConfig();
         }
         #endregion
+
+        private void Main_Closed(object sender, EventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void Main_GotFocus(object sender, RoutedEventArgs e)
+        {
+            InputBoxField.Focus();
+        }
     }
 }

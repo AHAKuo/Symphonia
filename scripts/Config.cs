@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 
 namespace Symphonia.scripts
 {
@@ -8,10 +10,10 @@ namespace Symphonia.scripts
     internal static class Config
     {
         public const string prefsFolder = "PersonalApps/Symphonia";
-        public static string configPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), prefsFolder);
+        public static string ConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), prefsFolder);
 
         #region Savables
-        public static string pathToMusicFolder = string.Empty;
+        public static string PathToMusicFolder = string.Empty;
         public static CurrentWindowMode currentWindowMode = CurrentWindowMode.Normal;
         public static float CurrentSongVolume = 0.5f;
         public static bool CurrentlyTopMost = true;
@@ -19,51 +21,65 @@ namespace Symphonia.scripts
         #endregion
 
         #region Loading
-        /// <summary>
-        /// Load the config
-        /// </summary>
         public static void LoadConfig(Action endAction)
         {
-            // if it doesn't exist, create it
-            if (!System.IO.Directory.Exists(configPath))
-                System.IO.Directory.CreateDirectory(configPath);
+            string filePath = Path.Combine(ConfigPath, "config.json");
 
-            // Define the path to the 'folderpath.txt' file
-            string filePath = System.IO.Path.Combine(configPath, "folderpath.txt");
-
-            // Check if the 'folderpath.txt' file exists
-            if (System.IO.File.Exists(filePath))
+            if (File.Exists(filePath))
             {
-                // Read the path from the file
-                string savedPath = System.IO.File.ReadAllText(filePath);
+                string json = File.ReadAllText(filePath);
+                var configData = JsonConvert.DeserializeObject<ConfigData>(json);
 
-                // Check if the read path is not empty and directory exists
-                if (!string.IsNullOrWhiteSpace(savedPath) && System.IO.Directory.Exists(savedPath))
+                if (configData != null)
                 {
-                    pathToMusicFolder = savedPath;
-                }
-                else
-                {
-                    System.Windows.MessageBox.Show("Saved music folder path is invalid or does not exist.");
-                    // You can also set a default path or prompt the user to select a folder again
+                    // Load data from ConfigData object
+                    PathToMusicFolder = configData.pathToMusicFolder;
+                    CurrentSongVolume = configData.currentSongVolume;
+                    currentWindowMode = configData.currentWindowMode;
+                    CurrentlyTopMost = configData.currentlyTopMost;
+                    CurrentlyRepeating = configData.currentlyRepeating;
                 }
             }
             else
             {
-                System.Windows.MessageBox.Show("Music folder path not set. Please select a folder.");
-                // Prompt the user to select a folder or set a default path
-            }
+                // Initialize default values
+                PathToMusicFolder = ""; // Default music folder path
+                CurrentSongVolume = 0.5f; // Default volume
+                currentWindowMode = CurrentWindowMode.Normal; // Default window mode
+                CurrentlyTopMost = true; // Default topmost setting
+                CurrentlyRepeating = false; // Default repeating setting
 
-            CurrentSongVolume = 0.5f; // to be loaded later
-            currentWindowMode = CurrentWindowMode.Normal; // to be loaded.
-            CurrentlyTopMost = true; // to be loaded
+                // Save the default configuration
+                SaveConfig();
+            }
 
             endAction?.Invoke();
         }
 
         public static void SaveConfig()
         {
-            // saves current data
+            var configData = new ConfigData
+            {
+                pathToMusicFolder = PathToMusicFolder,
+                currentSongVolume = CurrentSongVolume,
+                currentWindowMode = currentWindowMode,
+                currentlyTopMost = CurrentlyTopMost,
+                currentlyRepeating = CurrentlyRepeating
+            };
+
+            string json = JsonConvert.SerializeObject(configData, Formatting.Indented);
+
+            string filePath = Path.Combine(ConfigPath, "config.json");
+            File.WriteAllText(filePath, json);
+        }
+
+        private class ConfigData
+        {
+            public string pathToMusicFolder { get; set; }
+            public float currentSongVolume { get; set; }
+            public CurrentWindowMode currentWindowMode { get; set; }
+            public bool currentlyTopMost { get; set; }
+            public bool currentlyRepeating { get; set; }
         }
 
         public enum CurrentWindowMode

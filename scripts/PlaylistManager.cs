@@ -27,7 +27,7 @@ namespace Symphonia.scripts
             /// Initialize the playlist with init mode.
             /// </summary>
             /// <param name="initMode"></param>
-            public void InitializePlaylist(InitMode initMode)
+            public void InitializePlaylist(InitMode initMode, string searchPath = "")
             {
                 switch (initMode)
                 {
@@ -35,6 +35,14 @@ namespace Symphonia.scripts
                         songPaths = new List<string>()
                         {
                             GetRandomSongFromPath()
+                        };
+                        currentIndex = 0;
+                        break;
+
+                    case InitMode.FromSearch:
+                        songPaths = new List<string>()
+                        {
+                            searchPath
                         };
                         currentIndex = 0;
                         break;
@@ -68,7 +76,8 @@ namespace Symphonia.scripts
 
             public enum InitMode
             {
-                ShuffleAll
+                ShuffleAll,
+                FromSearch
             }
 
             public void IncrementPlaylist(bool goBack)
@@ -123,54 +132,20 @@ namespace Symphonia.scripts
         /// <returns></returns>
         private static string GetRandomSongFromPath()
         {
-            try
+            Random rand = new();
+
+            var musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
+                                             .ToList();
+
+            if (musicFiles.Count <= 0)
             {
-                Random rand = new();
-                var musicFiles = new List<string>();
-
-                // Get all mp3 files in the root directory
-                musicFiles.AddRange(Directory.GetFiles(pathToMusicFolder, "*.mp3"));
-
-                // Get all subdirectories in the root directory
-                var firstLevelDirectories = Directory.GetDirectories(pathToMusicFolder);
-
-                foreach (var dir in firstLevelDirectories)
-                {
-                    // Get all mp3 files in the first level subdirectory
-                    musicFiles.AddRange(Directory.GetFiles(dir, "*.mp3"));
-
-                    // Get all subdirectories in the first level subdirectory
-                    var secondLevelDirectories = Directory.GetDirectories(dir);
-                    foreach (var subDir in secondLevelDirectories)
-                    {
-                        // Get all mp3 files in the second level subdirectory
-                        musicFiles.AddRange(Directory.GetFiles(subDir, "*.mp3"));
-                    }
-                }
-
-                if (musicFiles.Count <= 0)
-                {
-                    System.Windows.MessageBox.Show("No music files found in the specified folder.", "Symphonia", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return string.Empty;
-                }
-
-                string songToPlay = musicFiles.OrderBy(x => rand.Next()).ToArray().FirstOrDefault();
-
-                if (string.IsNullOrEmpty(songToPlay)) { return string.Empty; }
-
-                return songToPlay;
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show("An error occured: " + ex.Message, "Symphonia", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("No music files found in the specified folder.", "Symphonia", MessageBoxButton.OK, MessageBoxImage.Error);
                 return string.Empty;
             }
+
+            string songToPlay = musicFiles.OrderBy(x => rand.Next()).FirstOrDefault();
+
+            return songToPlay ?? string.Empty;
         }
-
-        #region Playlist Handler
-
-        #endregion
-
-
     }
 }

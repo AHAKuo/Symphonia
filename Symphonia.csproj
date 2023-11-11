@@ -7,17 +7,26 @@
     <UseWPF>true</UseWPF>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <FileVersion>1.0.0</FileVersion>
+    <PackageIcon>icon.png</PackageIcon>
+    <Title>Symphonia</Title>
+    <ApplicationIcon>images\icon.ico</ApplicationIcon>
+    <StartupObject>Symphonia.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="EPIC XI morgana.jpg" />
+    <None Remove="images\cog.png" />
+    <None Remove="images\collapse.png" />
+    <None Remove="images\EPIC XI morgana.jpg" />
+    <None Remove="images\expand.png" />
     <None Remove="images\folder.png" />
     <None Remove="images\goleft.png" />
     <None Remove="images\goright.png" />
+    <None Remove="images\icon.ico" />
     <None Remove="images\pause.png" />
     <None Remove="images\play.png" />
     <None Remove="images\repeatoff.png" />
     <None Remove="images\repeaton.png" />
+    <None Remove="images\search.png" />
     <None Remove="images\shuffle.png" />
   </ItemGroup>
 
@@ -34,20 +43,46 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="images\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="EPIC XI morgana.jpg" />
+    <Folder Include="external\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="images\cog.png" />
+    <Resource Include="images\collapse.png" />
+    <Resource Include="images\EPIC XI morgana.jpg" />
+    <Resource Include="images\expand.png" />
     <Resource Include="images\folder.png" />
     <Resource Include="images\goleft.png" />
     <Resource Include="images\goright.png" />
+    <Resource Include="images\icon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="images\icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="images\pause.png" />
     <Resource Include="images\play.png" />
     <Resource Include="images\repeatoff.png" />
     <Resource Include="images\repeaton.png" />
+    <Resource Include="images\search.png" />
     <Resource Include="images\shuffle.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="images\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

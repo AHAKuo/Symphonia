@@ -1,0 +1,44 @@
+﻿<Window x:Name="InputBoxWindow" x:Class="Symphonia.InputBox"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Symphonia" 
+        mc:Ignorable="d"
+        Title="Symphonia" ResizeMode="NoResize" Width="250" Height="200" MaxHeight="500" MinWidth="338" MinHeight="100" FontFamily="Euphorigenic" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#FF151515" Topmost="True" ShowInTaskbar="False" WindowStyle="ToolWindow" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Button Style -->
+        <Style TargetType="Button">
+            <!-- Setters for the default appearance of the button -->
+
+            <!-- Trigger for when the button is disabled -->
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF444444"/>
+                    <Setter Property="Background" Value="#FF333333"/>
+                    <!-- You can set other properties like BorderBrush here if needed -->
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#FF201A25">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="16"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="16"/>
+        </Grid.RowDefinitions>
+        <Button Grid.Row="2" Grid.Column="1" x:Name="SearchButton" Margin="3" Background="#FF4B2F5F" Content="Search" Foreground="White" HorizontalContentAlignment="Center" VerticalAlignment="Center" FontSize="16" BorderBrush="{x:Null}" MaxWidth="128" MaxHeight="128">
+        </Button>
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="InputBoxField" Margin="3" Background="#FF353535" Foreground="#FFB3B3B3" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" KeyDown="InputBoxField_KeyDown">
+        </TextBox>
+    </Grid>
+</Window>
