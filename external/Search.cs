@@ -7,6 +7,9 @@ using Symphonia.scripts;
 using System.IO;
 using System.Linq;
 using static Symphonia.scripts.Defaults;
+using System.Reflection.Metadata;
+using static Symphonia.external.Search;
+using System.Text.RegularExpressions;
 
 namespace Symphonia.external
 {
@@ -92,7 +95,7 @@ namespace Symphonia.external
             /// </summary>
             /// <param name="searchData"></param>
             /// <param name="textBoxEX"></param>
-            public void PerformSearch(Action<string> endAction, SearchData searchData, bool ThrowNullMessage = false, bool NoMenuIfOneResult = false, bool ThrowFailMessage = false)
+            public void PerformSearch(Action<string> endAction, SearchData searchData, bool ThrowNullMessage = false, bool NoMenuIfOneResult = false, bool ThrowFailMessage = false, bool albumSearch = false)
             {
                 // first check if query is empty or null or invalid
 
@@ -109,6 +112,8 @@ namespace Symphonia.external
                 // when performing search we need to create a new instance of the search window.
 
                 SearchWindow SearchWindow = new();
+
+                currentWindow?.Close();
 
                 currentWindow = SearchWindow;
 
@@ -154,7 +159,37 @@ namespace Symphonia.external
                 // then, we need to open the data and create buttons for each data and link them to the choose event.
 
                 StackPanel panelInSearch = SearchWindow.StackPanel;
-                List<Button> buttons = new();
+
+                // if album search, add a back button that performs an album search
+                if (albumSearch)
+                {
+                    Button backButton = ResultButton();
+                    backButton.Content = "<< Back";
+                    backButton.Click += (sender, e) =>
+                    {
+                        // create a new search query window that fills the window with all albums in the music folder
+                        Search.SearchQuery _ = new();
+                        _.SearchByMetaData((s) =>
+                        {
+                            currentWindow?.Close();
+
+                            Search.SearchData searchData = new(s, " ");
+                            Search.SearchQuery searchQuery = new();
+                            searchQuery.PerformSearch(async (_s) =>
+                            {
+                                if (MusicPlayer.HasInited)
+                                {
+                                    MusicPlayer.ClearCurrentPlayer();
+                                }
+                                PlaylistManager.CurrentPlaylist.ResetPlaylist();
+                                PlaylistManager.CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, _s);
+                                await MusicPlayer.MusicPlayingTask();
+                            }, searchData, true, true, true, albumSearch);
+
+                        }, Search.MediaMetaData.Folders, Config.PathToMusicFolder, true);
+                    };
+                    panelInSearch.Children.Add(backButton);
+                }
 
                 results.ForEach(x =>
                 {
@@ -165,7 +200,101 @@ namespace Symphonia.external
                         endAction(x);
                         currentWindow.Close();
                     };
-                    buttons.Add(button);
+                    panelInSearch.Children.Add(button);
+                });
+
+                // finally, show the form as dialog
+                if (results.Count == 1 && NoMenuIfOneResult)
+                {
+                    endAction(results[0]);
+                }
+                else
+                {
+                    SearchWindow.ShowDialog();
+                }
+            }
+
+            public void SearchByMetaData(Action<string> endAction, MediaMetaData metadataKind, string filePath, bool ThrowNullMessage = false, bool NoMenuIfOneResult = false, bool ThrowFailMessage = false)
+            {
+                // first check if query is empty or null or invalid
+
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    OnSearchFail?.Invoke();
+                    if (ThrowFailMessage)
+                    {
+                        MessageBox.Show("Invalid query", Defaults.defaultMessageBoxCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    return;
+                }
+
+                // when performing search we need to create a new instance of the search window.
+
+                SearchWindow SearchWindow = new();
+
+                currentWindow?.Close();
+
+                currentWindow = SearchWindow;
+
+                // empty panel
+                SearchWindow.StackPanel.Children.Clear();
+
+                List<string> results = new();
+
+                // perform search for song in current path
+
+                // Define the directory where the search will be performed
+                string searchDirectory = filePath; // Set your directory path here
+
+                results = supportedFormats.SelectMany(format => Directory.GetFiles(searchDirectory, format, SearchOption.AllDirectories))
+                                   .ToList();
+
+                if (results.Count <= 0)
+                {
+                    OnNoResult?.Invoke();
+                    MessageBox.Show("Couldn't find it!", Defaults.defaultMessageBoxCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (results == null) // count check
+                {
+                    SearchWindow.Close();
+
+                    if (ThrowNullMessage)
+                    {
+                        MessageBox.Show("Null problem.", Defaults.defaultMessageBoxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    return;
+                }
+                else
+                {
+                    OnResult?.Invoke();
+                }
+
+                switch (metadataKind)
+                {
+                    case MediaMetaData.Album: // TODO, this freezes the app
+                        results = results.Select(x => TagLib.File.Create(x).Tag.Album).Distinct().ToList();
+                        break;
+
+                    case MediaMetaData.Folders:
+                        results = results.OrderBy(x => Path.GetDirectoryName(x), new NaturalStringComparer()).Select(x => Path.GetDirectoryName(x)).Distinct().ToList();
+                        break;
+                }
+
+                // then, we need to open the data and create buttons for each data and link them to the choose event.
+
+                StackPanel panelInSearch = SearchWindow.StackPanel;
+
+                results.ForEach(x =>
+                {
+                    Button button = ResultButton();
+                    button.Content = Path.GetFileNameWithoutExtension(x);
+                    button.Click += (sender, e) =>
+                    {
+                        currentWindow.Close();
+                        endAction(x);
+                    };
                     panelInSearch.Children.Add(button);
                 });
 
@@ -180,6 +309,45 @@ namespace Symphonia.external
                 }
             }
             #endregion
+        }
+
+        public class NaturalStringComparer : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                return NaturalCompare(x, y);
+            }
+
+            private int NaturalCompare(string a, string b)
+            {
+                // Split the strings into their numeric and alphabetic components
+                var regex = new Regex(@"(\d+|\D+)");
+                var aParts = regex.Matches(a).Cast<Match>().Select(m => m.Value).ToArray();
+                var bParts = regex.Matches(b).Cast<Match>().Select(m => m.Value).ToArray();
+
+                for (int i = 0; i < Math.Min(aParts.Length, bParts.Length); i++)
+                {
+                    if (int.TryParse(aParts[i], out int aNum) && int.TryParse(bParts[i], out int bNum))
+                    {
+                        int numCompare = aNum.CompareTo(bNum);
+                        if (numCompare != 0) return numCompare;
+                    }
+                    else
+                    {
+                        int strCompare = string.Compare(aParts[i], bParts[i], StringComparison.OrdinalIgnoreCase);
+                        if (strCompare != 0) return strCompare;
+                    }
+                }
+
+                return aParts.Length.CompareTo(bParts.Length);
+            }
+        }
+
+
+        public enum MediaMetaData
+        {
+            Album,
+            Folders
         }
     }
 }

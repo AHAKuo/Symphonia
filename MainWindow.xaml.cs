@@ -4,6 +4,7 @@ using Symphonia.scripts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
@@ -170,22 +171,43 @@ namespace Symphonia
             {
                 if(e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Return)
                 {
-                    Search.SearchData searchData = new(PathToMusicFolder, InputBoxField.Text);
-                    Search.SearchQuery searchQuery = new();
-                    searchQuery.PerformSearch(async (s) =>
+                    SearchForFiles(PathToMusicFolder, InputBoxField.Text, false);
+                }
+            };
+
+            // set the album opener key on the icon
+            SymphoniaIcon.MouseDown += (sender, e) =>
+            {
+                if (e.ChangedButton == MouseButton.Left)
+                {
+                    // create a new search query window that fills the window with all albums in the music folder
+                    Search.SearchQuery _ = new();
+                    _.SearchByMetaData((s) =>
                     {
-                        if (HasInited)
-                        {
-                            ClearCurrentPlayer();
-                        }
-                        CurrentPlaylist.ResetPlaylist();
-                        CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, s);
-                        await MusicPlayingTask();
-                    }, searchData, true, true, true);
-                    InputBoxField.Text = string.Empty;
+                        SearchForFiles(Path.GetFullPath(s), " ", true);
+                    }, Search.MediaMetaData.Folders, PathToMusicFolder, true);
                 }
             };
         }
+
+        #region Methods
+        private void SearchForFiles(string path, string arg, bool albumSearch)
+        {
+            Search.SearchData searchData = new(path, arg);
+            Search.SearchQuery searchQuery = new();
+            searchQuery.PerformSearch(async (s) =>
+            {
+                if (HasInited)
+                {
+                    ClearCurrentPlayer();
+                }
+                CurrentPlaylist.ResetPlaylist();
+                CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, s);
+                await MusicPlayingTask();
+            }, searchData, true, true, true, albumSearch);
+            InputBoxField.Text = string.Empty;
+        }
+        #endregion
 
         #endregion
 

@@ -83,7 +83,7 @@
                 <RowDefinition Height="16"/>
             </Grid.RowDefinitions>
 
-            <Image x:Name="Icon" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15" MinWidth="0" MinHeight="0" Source="/images/icon.png" Height="55" Width="55" Grid.RowSpan="4" Grid.ColumnSpan="2"/>
+            <Image x:Name="SymphoniaIcon" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15" MinWidth="0" MinHeight="0" Source="/images/icon.png" Height="55" Width="55" Grid.RowSpan="4" Grid.ColumnSpan="2"/>
 
             <StackPanel x:Name="WindowToolbar" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="Auto" FlowDirection="RightToLeft" Background="Black" Orientation="Horizontal">
                 <Button x:Name="CloseWindowButton" Background="#FFC82727" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
