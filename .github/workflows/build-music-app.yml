@@ -63,6 +63,22 @@ jobs:
           echo "EXE_PATH=$($exe.FullName)" >> $env:GITHUB_ENV
           echo "EXE_NAME=$($exe.Name)" >> $env:GITHUB_ENV
 
+      # Get Git ver tag Message
+      - name: Get tag or commit message
+        shell: bash
+        run: |
+          git fetch --tags --force
+          TAG_MSG="$(git for-each-ref refs/tags/${{ github.ref_name }} --format="%(contents)")"
+          if [ -z "$TAG_MSG" ]; then
+            TAG_MSG="$(git log -1 --pretty=%B)"
+          fi
+          {
+            echo "TAG_MSG<<EOF"
+            echo "$TAG_MSG"
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+
       # Create GitHub Release for this tag
       - name: Create GitHub Release
         id: create_release
@@ -73,6 +89,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           release_name: "Release ${{ github.ref_name }}"
           body: |
+            ${{ env.TAG_MSG }}
+            --------META----------
             Tag: ${{ github.ref_name }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
