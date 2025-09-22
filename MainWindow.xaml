@@ -13,16 +13,11 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <!-- Button Style -->
         <Style TargetType="Button">
-            <!-- Setters for the default appearance of the button -->
-
-            <!-- Trigger for when the button is disabled -->
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Foreground" Value="#FF444444"/>
                     <Setter Property="Background" Value="#FF333333"/>
-                    <!-- You can set other properties like BorderBrush here if needed -->
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -123,7 +118,23 @@
 
             <Slider x:Name="SeekBar" Grid.Column="1" Grid.Row="5" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center"/>
 
-            <Slider x:Name="VolumeBar" Grid.Column="1" Grid.Row="6" HorizontalAlignment="Stretch" Margin="1,1,1,1" IsMoveToPointEnabled="False" VerticalAlignment="Center" TickPlacement="BottomRight" Value="-2" Maximum="1"/>
+            <Grid Grid.Column="1" Grid.Row="6" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Slider x:Name="VolumeBar" Grid.Column="1" 
+                        HorizontalAlignment="Stretch" Margin="1,1,1,1" 
+                        IsMoveToPointEnabled="False" VerticalAlignment="Center" 
+                        TickPlacement="BottomRight" Value="-2" Maximum="1"/>
+                <Button x:Name="SetMinPositiveVolumeButton" Grid.Column="0" 
+                        Content="Min" Foreground="White" Background="#FF505050" 
+                        BorderBrush="#FF606060" BorderThickness="1"
+                        Margin="5,0,5,0" Padding="5,2" VerticalAlignment="Center" 
+                        ToolTip="Set volume to minimum positive value">
+                </Button>
+            </Grid>
 
             <Button x:Name="ToggleWindowMode" Background="#FF0E0D0E" BorderBrush="{x:Null}" Height="Auto" Width="Auto" Grid.Row="9" Grid.Column="1">
                 <Image x:Name="ToggleWindowModeIcon" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/collapse.png" Height="Auto" Width="Auto" Margin="2"/>
