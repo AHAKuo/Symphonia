@@ -42,8 +42,8 @@ jobs:
     - name: Run tests
       run: dotnet test $env:Project_Path --configuration ${{ matrix.configuration }}
 
-    - name: Publish self-contained
-      run: msbuild $env:Project_Path /t:Publish /p:Configuration=${{ matrix.configuration }} /p:RuntimeIdentifier=win-x64 /p:SelfContained=true /p:PublishDir=publish\${{ matrix.configuration }}
+    - name: Publish single-file self-contained
+      run: msbuild $env:Project_Path /t:Publish /p:Configuration=${{ matrix.configuration }} /p:RuntimeIdentifier=win-x64 /p:SelfContained=true /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true /p:PublishDir=publish\${{ matrix.configuration }}
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
