@@ -12,6 +12,7 @@
     <ApplicationIcon>images\icon.ico</ApplicationIcon>
     <StartupObject>Symphonia.App</StartupObject>
     <Company>AHAlwagdani</Company>
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
