@@ -42,7 +42,7 @@ jobs:
       run: dotnet test $env:Project_Path --configuration ${{ matrix.configuration }}
 
     - name: Publish self-contained
-      run: dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-x64 --self-contained true -o publish/${{ matrix.configuration }}
+      run: msbuild $env:Project_Path /t:Publish /p:Configuration=${{ matrix.configuration }} /p:RuntimeIdentifier=win-x64 /p:SelfContained=true /p:PublishDir=publish\${{ matrix.configuration }}
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
