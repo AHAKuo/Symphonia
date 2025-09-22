@@ -87,9 +87,6 @@
                 <Button x:Name="MinimizeWindowButton" Background="#FF25584D" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
                     <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/minimize.png" Height="Auto" Width="Auto" Margin="2"/>
                 </Button>
-                <Button x:Name="ConfigButton" Background="#FF6B6B6B" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
-                    <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/cog.png" Height="Auto" Width="Auto" Margin="2"/>
-                </Button>
                 <Button x:Name="SetPathButton" Background="#FF223C65" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
                     <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/folder.png" Height="Auto" Width="Auto" Margin="2"/>
                 </Button>
