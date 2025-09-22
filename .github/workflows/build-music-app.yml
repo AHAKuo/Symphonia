@@ -2,9 +2,8 @@ name: Symphonia App
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - 'v*'   # runs only when you push tags starting with "v"
   workflow_dispatch:   # 👈 allows manual trigger
 
 jobs:
