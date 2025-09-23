@@ -1,5 +1,7 @@
 # 🎶 Symphonia
 
+![Symphonia Banner](repovisuals/banner.png)
+
 Symphonia is a **Windows XAML-based offline music player**.  
 It’s lightweight, simple, and designed for anyone who just wants to play their local music without relying on online services.
 
@@ -17,14 +19,12 @@ It’s lightweight, simple, and designed for anyone who just wants to play their
 
 ---
 
-## 📦 Installation
+## 📦 Installation  
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/<your-username>/Symphonia.git
-   ```
-2. Open the project in **Visual Studio**.
-3. Build and run — you’re good to go!
+- 🔽 **Option 1:** Download the latest release from the [Releases](../../releases) section and run the `.exe`.  
+- 🛠️ **Option 2:** Build it yourself  
+  ```bash
+  git clone https://github.com/<your-username>/Symphonia.git
 
 ---
 
