@@ -1,6 +1,6 @@
 # 🎶 Symphonia
 
-![Symphonia Banner](repovisuals/banner.png)
+![Symphonia Banner](repovisuals/banner.jpg)
 
 Symphonia is a **Windows XAML-based offline music player**.  
 It’s lightweight, simple, and designed for anyone who just wants to play their local music without relying on online services.
