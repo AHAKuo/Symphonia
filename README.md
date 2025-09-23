@@ -15,7 +15,7 @@ It’s lightweight, simple, and designed for anyone who just wants to play their
 - 📂 Browse and organize tracks  
 - ⏯️ Basic playback controls (Play, Pause, Skip)  
 - 🌓 Simple and clean UI built with XAML  
-- 🚧 Future: playlists, themes, and more advanced playback options  
+- 🚧 Future: heart system, themes, and more advanced playback options  
 
 ---
 
