@@ -11,7 +11,7 @@ namespace Symphonia.scripts
     /// </summary>
     internal static class Config
     {
-        public const string prefsFolder = "PersonalApps/Symphonia";
+        public const string prefsFolder = "Ahasan アハさん/Symphonia";
         public static string ConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), prefsFolder);
 
         #region Savables
