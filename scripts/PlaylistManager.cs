@@ -127,7 +127,7 @@ namespace Symphonia.scripts
         }
 
         /// <summary>
-        /// Returns a random song from the path.
+        /// Returns a random song from the path, with a chance to select from favorites.
         /// </summary>
         /// <returns></returns>
         // Returns a random song, avoiding the current song if possible
@@ -135,10 +135,33 @@ namespace Symphonia.scripts
         {
             Random rand = new();
 
-            var musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
-                                             .ToList();
+            // Check if we should try to play a favorite song (30% chance)
+            string favoriteSong = GetRandomFavoriteSong();
+            if (favoriteSong != null && rand.Next(100) < 30) // 30% chance to play a favorite
+            {
+                // Try to find the favorite song in the music folder
+                var musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
+                                                 .ToList();
 
-            if (musicFiles.Count == 0)
+                var favoriteSongPath = musicFiles.FirstOrDefault(file => 
+                    Path.GetFileNameWithoutExtension(file).Equals(favoriteSong, StringComparison.OrdinalIgnoreCase));
+
+                if (favoriteSongPath != null)
+                {
+                    // Set cooldown after playing a favorite
+                    SetFavoriteCooldown();
+                    return favoriteSongPath;
+                }
+            }
+
+            // Decrement cooldown counter
+            DecrementFavoriteCooldown();
+
+            // Regular random song selection
+            var allMusicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
+                .ToList();
+
+            if (allMusicFiles.Count == 0)
             {
                 System.Windows.MessageBox.Show("No music files found in the specified folder.", "Symphonia", MessageBoxButton.OK, MessageBoxImage.Error);
                 return string.Empty;
@@ -150,7 +173,7 @@ namespace Symphonia.scripts
                 musicFiles = musicFiles.Where(f => !string.Equals(f, currentSongPath, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
-            string songToPlay = musicFiles.OrderBy(x => rand.Next()).FirstOrDefault();
+            string songToPlay = allMusicFiles.OrderBy(x => rand.Next()).FirstOrDefault();
             return songToPlay ?? string.Empty;
         }
     }
