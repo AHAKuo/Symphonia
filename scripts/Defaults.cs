@@ -16,7 +16,6 @@ namespace Symphonia.scripts
         #endregion
 
         #region Strict Settings
-        public const int maxPlaylistSize = 50;
         public const int maxTimeBeforePreviousPlay = 5; // time in seconds before we restart the song instead of going to the previous one
         public const double collapsedHeight = 310; // time in seconds before we restart the song instead of going to the previous one
         public const double normalHeight = 500; // time in seconds before we restart the song instead of going to the previous one
