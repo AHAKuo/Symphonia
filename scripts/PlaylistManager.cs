@@ -101,7 +101,7 @@ namespace Symphonia.scripts
                     }
 
                     currentIndex++;
-                    var newSong = GetRandomSongFromPath();
+                    var newSong = GetRandomSongFromPath(songPaths.Count > 0 ? songPaths[currentIndex] : null);
                     songPaths.Add(newSong);
                 }
             }
@@ -130,21 +130,27 @@ namespace Symphonia.scripts
         /// Returns a random song from the path.
         /// </summary>
         /// <returns></returns>
-        private static string GetRandomSongFromPath()
+        // Returns a random song, avoiding the current song if possible
+        private static string GetRandomSongFromPath(string currentSongPath = null)
         {
             Random rand = new();
 
             var musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
                                              .ToList();
 
-            if (musicFiles.Count <= 0)
+            if (musicFiles.Count == 0)
             {
                 System.Windows.MessageBox.Show("No music files found in the specified folder.", "Symphonia", MessageBoxButton.OK, MessageBoxImage.Error);
                 return string.Empty;
             }
 
-            string songToPlay = musicFiles.OrderBy(x => rand.Next()).FirstOrDefault();
+            // Exclude current song if more than one song exists
+            if (!string.IsNullOrEmpty(currentSongPath) && musicFiles.Count > 1)
+            {
+                musicFiles = musicFiles.Where(f => !string.Equals(f, currentSongPath, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
 
+            string songToPlay = musicFiles.OrderBy(x => rand.Next()).FirstOrDefault();
             return songToPlay ?? string.Empty;
         }
     }
