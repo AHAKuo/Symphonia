@@ -154,7 +154,7 @@ namespace Symphonia.scripts
         }
 
         /// <summary>
-        /// Returns a random song from the path, with a chance to select from favorites.
+        /// Returns a random song from the path.
         /// </summary>
         /// <param name="currentSongPath">The current song path to avoid</param>
         /// <param name="existingPlaylist">The current playlist to avoid duplicates</param>
@@ -163,7 +163,7 @@ namespace Symphonia.scripts
         private static string GetRandomSongFromPath(string currentSongPath = null, List<string> existingPlaylist = null)
         {
             Random rand = new();
-
+          
             List<string> musicFiles = new();
             // Check if we should try to play a favorite song (30% chance)
             string favoriteSong = GetRandomFavoriteSong();
