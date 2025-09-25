@@ -14,6 +14,8 @@
     <Company>AHAlwagdani</Company>
     <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -92,6 +94,10 @@
 
   <ItemGroup>
     <None Update="images\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
