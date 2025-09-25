@@ -86,8 +86,6 @@
     <Resource Include="images\repeaton.png" />
     <Resource Include="images\search.png" />
     <Resource Include="images\shuffle.png" />
-    <Resource Include="images\heart_outline.png" />
-    <Resource Include="images\heart_inline.png" />
   </ItemGroup>
 
   <ItemGroup>
