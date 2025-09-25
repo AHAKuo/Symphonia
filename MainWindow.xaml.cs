@@ -189,6 +189,15 @@ namespace Symphonia
                     }, Search.MediaMetaData.Folders, PathToMusicFolder, true);
                 }
             };
+
+            // Heart icon click handler for favorites
+            HeartIcon.MouseDown += (sender, e) =>
+            {
+                if (e.ChangedButton == MouseButton.Left && HasInited)
+                {
+                    ToggleCurrentSongFavorite();
+                }
+            };
         }
 
         #region Methods
@@ -207,6 +216,34 @@ namespace Symphonia
                 await MusicPlayingTask();
             }, searchData, true, true, true, albumSearch);
             InputBoxField.Text = string.Empty;
+        }
+
+        /// <summary>
+        /// Toggles the current song's favorite status and updates the heart icon
+        /// </summary>
+        private void ToggleCurrentSongFavorite()
+        {
+            if (!HasInited)
+                return;
+
+            string currentSongName = CurrentPlaylist.CurrentSong;
+            bool isNowFavorite = ToggleFavorite(currentSongName);
+            
+            // Update heart icon visual state
+            UpdateHeartIcon(isNowFavorite);
+            
+            // Save configuration
+            SaveConfig();
+        }
+
+        /// <summary>
+        /// Updates the heart icon based on favorite status
+        /// </summary>
+        /// <param name="isFavorite">True if the song is favorited</param>
+        private void UpdateHeartIcon(bool isFavorite)
+        {
+            string heartImagePath = isFavorite ? "/images/heart_inline.png" : "/images/heart_outline.png";
+            HeartIcon.Source = new BitmapImage(new Uri(heartImagePath, UriKind.Relative));
         }
         #endregion
 
@@ -265,6 +302,7 @@ namespace Symphonia
             UpdateTimestamp();
             UpdateVolume();
             UpdateConfigs();
+            UpdateHeartIconForCurrentSong();
         }
 
         private void UpdatePlayingLabel()
@@ -418,6 +456,20 @@ namespace Symphonia
 
             // Apply the animation to the Height property
             this.BeginAnimation(Window.HeightProperty, heightAnimation); SaveConfig();
+        }
+
+        private void UpdateHeartIconForCurrentSong()
+        {
+            if (!HasInited)
+            {
+                // Show outline heart when no song is playing
+                UpdateHeartIcon(false);
+                return;
+            }
+
+            string currentSongName = CurrentPlaylist.CurrentSong;
+            bool isFavorite = IsFavorite(currentSongName);
+            UpdateHeartIcon(isFavorite);
         }
         #endregion
 
