@@ -14,7 +14,8 @@ It’s lightweight, simple, and designed for anyone who just wants to play their
 - 🎵 Play music stored locally on your computer  
 - 📂 Browse and organize tracks  
 - ⏯️ Basic playback controls (Play, Pause, Skip)  
-- 🌓 Simple and clean UI built with XAML  
+- 🌓 Simple and clean UI built with XAML
+- 💖 Simple hearting system to favorite songs, making them play more frequently.
 - 🚧 Future: themes, and more advanced playback options  
 
 ---
