@@ -101,7 +101,7 @@ namespace Symphonia.scripts
                     }
 
                     currentIndex++;
-                    var newSong = GetRandomSongFromPath(songPaths.Count > 0 ? songPaths[currentIndex] : null);
+                    var newSong = GetRandomSongFromPath(songPaths.Count > 0 ? songPaths[currentIndex-1] : null);
                     songPaths.Add(newSong);
                 }
             }
@@ -135,12 +135,13 @@ namespace Symphonia.scripts
         {
             Random rand = new();
 
+            List<string> musicFiles = new();
             // Check if we should try to play a favorite song (30% chance)
             string favoriteSong = GetRandomFavoriteSong();
             if (favoriteSong != null && rand.Next(100) < 30) // 30% chance to play a favorite
             {
                 // Try to find the favorite song in the music folder
-                var musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
+                musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
                                                  .ToList();
 
                 var favoriteSongPath = musicFiles.FirstOrDefault(file => 
