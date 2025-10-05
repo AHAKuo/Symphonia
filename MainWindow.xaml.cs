@@ -159,7 +159,7 @@ namespace Symphonia
             };
             SeekBar.ValueChanged += (sender, e) => UpdateSongTime();
             VolumeBar.ValueChanged += (sender, e) => UpdateVolume();
-            SetMinPositiveVolumeButton.Click += (sender, e) => VolumeBar.Value = 0.01f;
+            SetMinPositiveVolumeButton.Click += (sender, e) => VolumeBar.Value * 0.5f;
             MusicControlButton_4.Click += (sender, e) => NextSong();
             MusicControlButton_0.Click += (sender, e) => PreviousSong();
             MusicControlButton_2.Click += (sender, e) => ToggleRepeat(UpdateAll);
