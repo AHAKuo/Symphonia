@@ -92,6 +92,12 @@
                 <Button x:Name="SetPathButton" Background="#FF223C65" BorderBrush="{x:Null}" Height="Auto" Width="Auto">
                     <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="/images/folder.png" Height="Auto" Width="Auto" Margin="2"/>
                 </Button>
+                <Button x:Name="FavoriteConfigButton"
+                        Background="#FF223C65"
+                        BorderBrush="{x:Null}"
+                        Height="{Binding ActualHeight, ElementName=SetPathButton}"
+                        Width="{Binding ActualHeight, ElementName=SetPathButton}"
+                        ToolTip="Export or import favorite songs"/>
             </StackPanel>
 
             <Border x:Name="Topbar" Grid.Column="1" Grid.Row="0" Margin="20,1,20,1" Width="Auto" Height="Auto">
