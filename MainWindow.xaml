@@ -96,8 +96,7 @@
                         Background="#FF223C65"
                         BorderBrush="{x:Null}"
                         Height="{Binding ActualHeight, ElementName=SetPathButton}"
-                        Width="{Binding ActualWidth, ElementName=SetPathButton}"
-                        Margin="2"
+                        Width="{Binding ActualHeight, ElementName=SetPathButton}"
                         ToolTip="Export or import favorite songs"/>
             </StackPanel>
 
