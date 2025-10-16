@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
 using System;
@@ -205,19 +206,22 @@ namespace Symphonia
         #region Methods
         private void FavoriteConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            var action = System.Windows.MessageBox.Show(
-                "Would you like to export or import favorites?\nSelect Yes to export or No to import.",
-                "Favorite Configuration",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question,
-                MessageBoxResult.Cancel);
-
-            switch (action)
+            FavoriteConfigDialog favoriteConfigDialog = new()
             {
-                case MessageBoxResult.Yes:
+                Owner = this
+            };
+
+            if (favoriteConfigDialog.ShowDialog() != true || favoriteConfigDialog.SelectedAction == null)
+            {
+                return;
+            }
+
+            switch (favoriteConfigDialog.SelectedAction)
+            {
+                case FavoriteConfigAction.Export:
                     ExportFavoriteSongs();
                     break;
-                case MessageBoxResult.No:
+                case FavoriteConfigAction.Import:
                     ImportFavoriteSongs();
                     break;
             }
@@ -302,23 +306,21 @@ namespace Symphonia
                 return;
             }
 
-            var importChoice = System.Windows.MessageBox.Show(
-                "How would you like to import these favorites?\nYes = Expand, No = Overwrite.",
-                "Import Favorites",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question,
-                MessageBoxResult.Cancel);
+            FavoriteImportModeDialog importModeDialog = new(importedFavorites.Count)
+            {
+                Owner = this
+            };
 
-            if (importChoice == MessageBoxResult.Cancel)
+            if (importModeDialog.ShowDialog() != true || importModeDialog.SelectedMode == null)
             {
                 return;
             }
 
-            if (importChoice == MessageBoxResult.No)
+            if (importModeDialog.SelectedMode == FavoriteImportMode.Overwrite)
             {
                 FavoriteSongs = new HashSet<string>(importedFavorites);
             }
-            else if (importChoice == MessageBoxResult.Yes)
+            else if (importModeDialog.SelectedMode == FavoriteImportMode.Expand)
             {
                 foreach (string song in importedFavorites)
                 {
