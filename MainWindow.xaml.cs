@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
@@ -125,6 +126,7 @@ namespace Symphonia
                 scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleOut);
             };
             SetPathButton.Click += (sender, e) => SetMusicPath();
+            FavoriteConfigButton.Click += FavoriteConfigButton_Click;
             MusicControlButton_1.Click += (sender, e) => PauseOrPlay(UpdateAll);
             MusicControlButton_3.Click += (sender, e) => ShuffleAll();
             SeekBar.Loaded += (sender, e) =>
@@ -201,6 +203,139 @@ namespace Symphonia
         }
 
         #region Methods
+        private void FavoriteConfigButton_Click(object sender, RoutedEventArgs e)
+        {
+            var action = System.Windows.MessageBox.Show(
+                "Would you like to export or import favorites?\nSelect Yes to export or No to import.",
+                "Favorite Configuration",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question,
+                MessageBoxResult.Cancel);
+
+            switch (action)
+            {
+                case MessageBoxResult.Yes:
+                    ExportFavoriteSongs();
+                    break;
+                case MessageBoxResult.No:
+                    ImportFavoriteSongs();
+                    break;
+            }
+        }
+
+        private void ExportFavoriteSongs()
+        {
+            if (FavoriteSongs.Count == 0)
+            {
+                System.Windows.MessageBox.Show(
+                    "There are no favorite songs to export.",
+                    "Favorite Configuration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            using FolderBrowserDialog folderBrowserDialog = new()
+            {
+                Description = "Select a folder to export your favorites"
+            };
+
+            if (folderBrowserDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+
+            string fileName = $"favorites_{DateTime.Now:yyyyMMdd_HHmmss}.symphofs";
+            string filePath = Path.Combine(folderBrowserDialog.SelectedPath, fileName);
+
+            File.WriteAllLines(filePath, FavoriteSongs.OrderBy(song => song));
+
+            System.Windows.MessageBox.Show(
+                $"Favorites exported successfully to:\n{filePath}",
+                "Favorite Configuration",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void ImportFavoriteSongs()
+        {
+            using OpenFileDialog openFileDialog = new()
+            {
+                Title = "Select a Symphonia favorites file",
+                Filter = "Symphonia Favorites (*.symphofs)|*.symphofs",
+                Multiselect = false
+            };
+
+            if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+
+            string[] importedLines;
+
+            try
+            {
+                importedLines = File.ReadAllLines(openFileDialog.FileName);
+            }
+            catch (IOException ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Failed to read favorites file.\n{ex.Message}",
+                    "Favorite Configuration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            var importedFavorites = importedLines
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .ToList();
+
+            if (importedFavorites.Count == 0)
+            {
+                System.Windows.MessageBox.Show(
+                    "The selected file does not contain any favorite songs.",
+                    "Favorite Configuration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var importChoice = System.Windows.MessageBox.Show(
+                "How would you like to import these favorites?\nYes = Expand, No = Overwrite.",
+                "Import Favorites",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question,
+                MessageBoxResult.Cancel);
+
+            if (importChoice == MessageBoxResult.Cancel)
+            {
+                return;
+            }
+
+            if (importChoice == MessageBoxResult.No)
+            {
+                FavoriteSongs = new HashSet<string>(importedFavorites);
+            }
+            else if (importChoice == MessageBoxResult.Yes)
+            {
+                foreach (string song in importedFavorites)
+                {
+                    FavoriteSongs.Add(song);
+                }
+            }
+
+            SaveConfig();
+            UpdateHeartIconForCurrentSong();
+
+            System.Windows.MessageBox.Show(
+                "Favorites imported successfully.",
+                "Favorite Configuration",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
         private void SearchForFiles(string path, string arg, bool albumSearch)
         {
             Search.SearchData searchData = new(path, arg);
