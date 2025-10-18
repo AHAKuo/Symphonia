@@ -1,4 +1,4 @@
-﻿<Window x:Name="Main" x:Class="Symphonia.MainWindow"
+<Window x:Name="Main" x:Class="Symphonia.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:Symphonia" 
         xmlns:shell="http://schemas.microsoft.com/netfx/2009/xaml/presentation"
         mc:Ignorable="d"
-        Title="Symphonia" Icon="images/icon.png" Topmost="True" ResizeMode="NoResize" Width="338" Height="550" FontFamily="Times New Roman" WindowStartupLocation="CenterScreen" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Closed="Main_Closed" GotFocus="Main_GotFocus" WindowStyle="None" AllowsTransparency="True" RenderTransformOrigin="0.5,0.5">
+        Title="Symphonia" Icon="images/icon.png" Topmost="True" ResizeMode="NoResize" Width="338" Height="550" FontFamily="Times New Roman" WindowStartupLocation="CenterScreen" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Closed="Main_Closed" GotFocus="Main_GotFocus" WindowStyle="None" AllowsTransparency="True" RenderTransformOrigin="0.5,0.5"
+        AllowDrop="True" DragEnter="Main_DragEnter" Drop="Main_Drop">
 
     <WindowChrome.WindowChrome>
         <shell:WindowChrome CornerRadius="50" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>

@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
@@ -12,6 +12,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
@@ -29,6 +31,44 @@ namespace Symphonia
     {
         #region Tracking Bools
 
+        #endregion
+
+        #region OS Keyboard Integration
+        private HwndSource hwndSource;
+        private bool hotkeysRegistered;
+
+        // Win32 constants
+        private const int WM_HOTKEY = 0x0312;
+        private const int WM_APPCOMMAND = 0x0319;
+
+        private const uint MOD_ALT = 0x0001;
+        private const uint MOD_CONTROL = 0x0002;
+        private const uint MOD_SHIFT = 0x0004;
+        private const uint MOD_WIN = 0x0008;
+
+        // AppCommand constants
+        private const int APPCOMMAND_VOLUME_MUTE = 8;
+        private const int APPCOMMAND_VOLUME_DOWN = 9;
+        private const int APPCOMMAND_VOLUME_UP = 10;
+        private const int APPCOMMAND_MEDIA_NEXTTRACK = 11;
+        private const int APPCOMMAND_MEDIA_PREVIOUSTRACK = 12;
+        private const int APPCOMMAND_MEDIA_STOP = 13;
+        private const int APPCOMMAND_MEDIA_PLAY_PAUSE = 14;
+
+        // Hotkey IDs
+        private const int HOTKEY_PLAY_PAUSE = 1;
+        private const int HOTKEY_NEXT = 2;
+        private const int HOTKEY_PREV = 3;
+        private const int HOTKEY_VOL_UP = 4;
+        private const int HOTKEY_VOL_DOWN = 5;
+        private const int HOTKEY_TOGGLE_REPEAT = 6;
+        private const int HOTKEY_SHUFFLE = 7;
+
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
         #endregion
 
         public MainWindow()
@@ -49,6 +89,9 @@ namespace Symphonia
             }); // load settings
 
             UpdateAll(); // update window with settings.
+
+            // Handle command-line invocation and OS keyboard integration
+            HandleCommandLineArgs();
         }
 
         private void InitPlayerEvents()
@@ -204,6 +247,318 @@ namespace Symphonia
         }
 
         #region Methods
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            // Attach native message hook for media keys and hotkeys
+            hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            hwndSource?.AddHook(WndProc);
+
+            RegisterGlobalHotKeys();
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_HOTKEY)
+            {
+                int id = wParam.ToInt32();
+                switch (id)
+                {
+                    case HOTKEY_PLAY_PAUSE:
+                        PauseOrPlay(UpdateAll);
+                        handled = true;
+                        break;
+                    case HOTKEY_NEXT:
+                        NextSong();
+                        handled = true;
+                        break;
+                    case HOTKEY_PREV:
+                        PreviousSong();
+                        handled = true;
+                        break;
+                    case HOTKEY_VOL_UP:
+                        AdjustVolume(+0.05);
+                        handled = true;
+                        break;
+                    case HOTKEY_VOL_DOWN:
+                        AdjustVolume(-0.05);
+                        handled = true;
+                        break;
+                    case HOTKEY_TOGGLE_REPEAT:
+                        ToggleRepeat(UpdateAll);
+                        handled = true;
+                        break;
+                    case HOTKEY_SHUFFLE:
+                        ShuffleAll();
+                        handled = true;
+                        break;
+                }
+            }
+            else if (msg == WM_APPCOMMAND)
+            {
+                int appCommand = (short)((((long)lParam) >> 16) & 0xFFFF);
+                switch (appCommand)
+                {
+                    case APPCOMMAND_MEDIA_PLAY_PAUSE:
+                        PauseOrPlay(UpdateAll);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_NEXTTRACK:
+                        NextSong();
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                        PreviousSong();
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_STOP:
+                        if (IsPlaying)
+                        {
+                            PauseCurrentMusic(UpdateAll);
+                        }
+                        handled = true;
+                        break;
+                    case APPCOMMAND_VOLUME_UP:
+                        AdjustVolume(+0.05);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_VOLUME_DOWN:
+                        AdjustVolume(-0.05);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_VOLUME_MUTE:
+                        VolumeBar.Value = 0;
+                        UpdateVolume();
+                        handled = true;
+                        break;
+                }
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private void RegisterGlobalHotKeys()
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            static uint VK(Key key) => (uint)KeyInterop.VirtualKeyFromKey(key);
+
+            // Ctrl+Alt+P => Play/Pause
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_PLAY_PAUSE, MOD_CONTROL | MOD_ALT, VK(Key.P));
+            // Ctrl+Alt+Right => Next
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_NEXT, MOD_CONTROL | MOD_ALT, VK(Key.Right));
+            // Ctrl+Alt+Left => Previous
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_PREV, MOD_CONTROL | MOD_ALT, VK(Key.Left));
+            // Ctrl+Alt+Up => Volume Up
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_VOL_UP, MOD_CONTROL | MOD_ALT, VK(Key.Up));
+            // Ctrl+Alt+Down => Volume Down
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_VOL_DOWN, MOD_CONTROL | MOD_ALT, VK(Key.Down));
+            // Ctrl+Alt+R => Toggle Repeat
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_TOGGLE_REPEAT, MOD_CONTROL | MOD_ALT, VK(Key.R));
+            // Ctrl+Alt+S => Shuffle
+            hotkeysRegistered |= RegisterHotKey(hwnd, HOTKEY_SHUFFLE, MOD_CONTROL | MOD_ALT, VK(Key.S));
+        }
+
+        private void UnregisterGlobalHotKeys()
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            UnregisterHotKey(hwnd, HOTKEY_PLAY_PAUSE);
+            UnregisterHotKey(hwnd, HOTKEY_NEXT);
+            UnregisterHotKey(hwnd, HOTKEY_PREV);
+            UnregisterHotKey(hwnd, HOTKEY_VOL_UP);
+            UnregisterHotKey(hwnd, HOTKEY_VOL_DOWN);
+            UnregisterHotKey(hwnd, HOTKEY_TOGGLE_REPEAT);
+            UnregisterHotKey(hwnd, HOTKEY_SHUFFLE);
+        }
+
+        private void AdjustVolume(double delta)
+        {
+            double min = 0.0;
+            double max = 1.0;
+            double newValue = VolumeBar.Value + delta;
+            if (newValue < min) newValue = min;
+            if (newValue > max) newValue = max;
+            VolumeBar.Value = newValue;
+            UpdateVolume();
+        }
+
+        private void CleanupOsKeyboardIntegration()
+        {
+            if (hotkeysRegistered)
+            {
+                UnregisterGlobalHotKeys();
+                hotkeysRegistered = false;
+            }
+            if (hwndSource != null)
+            {
+                hwndSource.RemoveHook(WndProc);
+                hwndSource = null;
+            }
+        }
+
+        private void HandleCommandLineArgs()
+        {
+            try
+            {
+                var args = Environment.GetCommandLineArgs();
+                if (args == null || args.Length < 2)
+                {
+                    return;
+                }
+
+                string path = args[1];
+                if (Directory.Exists(path))
+                {
+                    PathToMusicFolder = path;
+                    SaveFilePath();
+                    SaveConfig();
+                    UpdateAll();
+                    return;
+                }
+                if (File.Exists(path))
+                {
+                    if (IsSupportedAudioFile(path))
+                    {
+                        if (HasInited)
+                        {
+                            ClearCurrentPlayer();
+                        }
+                        CurrentPlaylist.ResetPlaylist();
+                        CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, path);
+                        _ = MusicPlayingTask();
+                        return;
+                    }
+                    if (string.Equals(Path.GetExtension(path), ".symphofs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ImportFavoriteSongsFromPath(path);
+                        return;
+                    }
+                }
+            }
+            catch { /* ignore command line parsing errors */ }
+        }
+
+        private static bool IsSupportedAudioFile(string filePath)
+        {
+            string ext = Path.GetExtension(filePath);
+            if (string.IsNullOrEmpty(ext)) return false;
+            return string.Equals(ext, ".mp3", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(ext, ".wav", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void ImportFavoriteSongsFromPath(string filePath)
+        {
+            try
+            {
+                var importedLines = File.ReadAllLines(filePath)
+                    .Select(line => line.Trim())
+                    .Where(line => !string.IsNullOrWhiteSpace(line))
+                    .ToList();
+
+                if (importedLines.Count == 0)
+                {
+                    System.Windows.MessageBox.Show(
+                        "The selected file does not contain any favorite songs.",
+                        "Favorite Configuration",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                foreach (var song in importedLines)
+                {
+                    FavoriteSongs.Add(song);
+                }
+
+                SaveConfig();
+                UpdateHeartIconForCurrentSong();
+
+                System.Windows.MessageBox.Show(
+                    "Favorites imported successfully.",
+                    "Favorite Configuration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (IOException ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Failed to read favorites file.\n{ex.Message}",
+                    "Favorite Configuration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void Main_DragEnter(object sender, System.Windows.DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private async void Main_Drop(object sender, System.Windows.DragEventArgs e)
+        {
+            try
+            {
+                if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    return;
+                }
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files == null || files.Length == 0)
+                {
+                    return;
+                }
+
+                string first = files[0];
+                if (Directory.Exists(first))
+                {
+                    PathToMusicFolder = first;
+                    SaveFilePath();
+                    SaveConfig();
+                    UpdateAll();
+                    return;
+                }
+
+                if (File.Exists(first))
+                {
+                    if (IsSupportedAudioFile(first))
+                    {
+                        if (HasInited)
+                        {
+                            ClearCurrentPlayer();
+                        }
+                        CurrentPlaylist.ResetPlaylist();
+                        CurrentPlaylist.InitializePlaylist(PlaylistManager.Playlist.InitMode.FromSearch, first);
+                        await MusicPlayingTask();
+                        return;
+                    }
+
+                    if (string.Equals(Path.GetExtension(first), ".symphofs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ImportFavoriteSongsFromPath(first);
+                        return;
+                    }
+                }
+            }
+            catch { /* ignore drag-drop issues */ }
+        }
         private void FavoriteConfigButton_Click(object sender, RoutedEventArgs e)
         {
             FavoriteConfigDialog favoriteConfigDialog = new()
@@ -612,6 +967,7 @@ namespace Symphonia
 
         private void Main_Closed(object sender, EventArgs e)
         {
+            CleanupOsKeyboardIntegration();
             System.Windows.Application.Current.Shutdown();
         }
 
