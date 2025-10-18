@@ -1,4 +1,4 @@
-﻿using NAudio.Wave;
+using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ namespace Symphonia.scripts
     {
         public static bool HasInited => CurrentPlayingEvent != null
         &&
-        (CurrentPlayingEvent.PlaybackState == PlaybackState.Playing || CurrentPlayingEvent.PlaybackState == PlaybackState.Paused || CurrentPlayingEvent.PlaybackState == PlaybackState.Paused);
+        (CurrentPlayingEvent.PlaybackState == PlaybackState.Playing || CurrentPlayingEvent.PlaybackState == PlaybackState.Paused || CurrentPlayingEvent.PlaybackState == PlaybackState.Stopped);
 
         public static bool IsPlaying => CurrentPlayingEvent != null
         &&
@@ -49,7 +49,25 @@ namespace Symphonia.scripts
         public delegate void HasStopped();
         public static event HasStopped OnHasStopped;
 
-        public static void ClearCurrentPlayer() => CurrentPlayingEvent.Dispose();
+        public static void ClearCurrentPlayer()
+        {
+            // Ensure we release any file handles and audio resources before creating a new player
+            try
+            {
+                CurrentPlayingFileReader?.Dispose();
+            }
+            catch { }
+            finally
+            {
+                CurrentPlayingFileReader = null;
+            }
+
+            try
+            {
+                CurrentPlayingEvent?.Dispose();
+            }
+            catch { }
+        }
 
         /// <summary>
         /// Plays the song with the file path.
@@ -88,7 +106,7 @@ namespace Symphonia.scripts
                     OnUpdate?.Invoke();
                 }
 
-                GoToNextSongAutomatically();
+                await GoToNextSongAutomatically();
             }
             catch (Exception ex)
             {
@@ -98,7 +116,9 @@ namespace Symphonia.scripts
 
         private static float CalculateAdjustedVolume()
         {
-            return CurrentSongVolume * 10;
+            // Clamp between 0 and 1 to avoid distortion and invalid values
+            var clamped = Math.Clamp(CurrentSongVolume, 0f, 1f);
+            return clamped;
         }
 
         #region Player Methods
@@ -121,7 +141,7 @@ namespace Symphonia.scripts
         /// <summary>
         /// Shuffles all the music in the music folder.
         /// </summary>
-        public static async void ShuffleAll()
+        public static async Task ShuffleAll()
         {
             // first, stop music if playing
 
@@ -146,7 +166,7 @@ namespace Symphonia.scripts
         /// Goes to the next song, while keeping the previous one safe. Similar to the shuffle method, but doesn't clear.
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        public static async void NextSong()
+        public static async Task NextSong()
         {
             // first, stop music if playing
             if (HasInited)
@@ -163,7 +183,7 @@ namespace Symphonia.scripts
         /// Goes to the next song, while keeping the list intact. Similar to the shuffle method, but doesn't clear.
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        public static async void PreviousSong()
+        public static async Task PreviousSong()
         {
             // first, stop music if playing
             if (HasInited)
@@ -218,7 +238,7 @@ namespace Symphonia.scripts
         /// <summary>
         /// For next song.
         /// </summary>
-        public static async void GoToNextSongAutomatically()
+        public static async Task GoToNextSongAutomatically()
         {
             if (CurrentlyRepeating)
             {
@@ -226,7 +246,7 @@ namespace Symphonia.scripts
             }
             else
             {
-                NextSong();
+                await NextSong();
             }
         }
         #endregion

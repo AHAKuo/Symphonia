@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +11,9 @@ namespace Symphonia.scripts
     /// </summary>
     internal static class Config
     {
+        // Shared RNG to avoid duplicate seeds and improve randomness across app
+        public static readonly Random SharedRandom = new Random();
+
         public const string prefsFolder = "Ahasan アハさん/Symphonia";
         public static string ConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), prefsFolder);
 
@@ -146,9 +149,13 @@ namespace Symphonia.scripts
                 return null;
             }
 
-            var random = new Random();
             var favoriteArray = FavoriteSongs.ToArray();
-            return favoriteArray[random.Next(favoriteArray.Length)];
+            int idx;
+            lock (SharedRandom)
+            {
+                idx = SharedRandom.Next(favoriteArray.Length);
+            }
+            return favoriteArray[idx];
         }
 
         /// <summary>
@@ -156,8 +163,10 @@ namespace Symphonia.scripts
         /// </summary>
         public static void SetFavoriteCooldown()
         {
-            var random = new Random();
-            SongsUntilNextFavoriteCheck = random.Next(2, 6); // Random between 2-5 songs
+            lock (SharedRandom)
+            {
+                SongsUntilNextFavoriteCheck = SharedRandom.Next(2, 6); // Random between 2-5 songs
+            }
         }
 
         /// <summary>

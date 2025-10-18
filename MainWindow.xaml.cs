@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
@@ -129,7 +129,7 @@ namespace Symphonia
             SetPathButton.Click += (sender, e) => SetMusicPath();
             FavoriteConfigButton.Click += FavoriteConfigButton_Click;
             MusicControlButton_1.Click += (sender, e) => PauseOrPlay(UpdateAll);
-            MusicControlButton_3.Click += (sender, e) => ShuffleAll();
+            MusicControlButton_3.Click += async (sender, e) => await ShuffleAll();
             SeekBar.Loaded += (sender, e) =>
             {
                 // Get the Track control from the Slider
@@ -162,9 +162,9 @@ namespace Symphonia
             };
             SeekBar.ValueChanged += (sender, e) => UpdateSongTime();
             VolumeBar.ValueChanged += (sender, e) => UpdateVolume();
-            SetMinPositiveVolumeButton.Click += (sender, e) => VolumeBar.Value = 0.005f;
-            MusicControlButton_4.Click += (sender, e) => NextSong();
-            MusicControlButton_0.Click += (sender, e) => PreviousSong();
+            SetMinPositiveVolumeButton.Click += (sender, e) => VolumeBar.Value = Math.Max(0.005f, VolumeBar.Minimum);
+            MusicControlButton_4.Click += async (sender, e) => await NextSong();
+            MusicControlButton_0.Click += async (sender, e) => await PreviousSong();
             MusicControlButton_2.Click += (sender, e) => ToggleRepeat(UpdateAll);
             ToggleWindowMode.Click += (sender, e) => {
                 currentWindowMode = currentWindowMode == CurrentWindowMode.Collapsed ? CurrentWindowMode.Normal : CurrentWindowMode.Collapsed;

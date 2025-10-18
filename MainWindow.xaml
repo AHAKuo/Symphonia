@@ -1,4 +1,4 @@
-﻿<Window x:Name="Main" x:Class="Symphonia.MainWindow"
+<Window x:Name="Main" x:Class="Symphonia.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -132,7 +132,7 @@
                 <Slider x:Name="VolumeBar" Grid.Column="1" 
                         HorizontalAlignment="Stretch" Margin="1,1,1,1" 
                         IsMoveToPointEnabled="False" VerticalAlignment="Center" 
-                        TickPlacement="BottomRight" Value="-2" Maximum="1"/>
+                        TickPlacement="BottomRight" Minimum="0" Maximum="1" Value="0.5"/>
                 <Button x:Name="SetMinPositiveVolumeButton" Grid.Column="0" 
                         Content="Min" Foreground="White" Background="#FF505050" 
                         BorderBrush="#FF606060" BorderThickness="1"
