@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.rid }} on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,7 +20,7 @@ jobs:
           - os: windows-latest
             rid: win-x64
           - os: macos-latest
-            rid: osx-arm64
+            mac_restore_only: true
     env:
       Solution_Name: Symphonia.sln
       Project_Path: Symphonia.csproj
@@ -37,38 +37,41 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Restore
-        run: dotnet restore "${{ env.Solution_Name }}" --runtime ${{ matrix.rid }}
+      # Use full Visual Studio MSBuild on Windows so COMReference works
+      - name: Setup MSBuild (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Build
-        run: dotnet build "${{ env.Solution_Name }}" -c "${{ env.Configuration }}" --no-restore
+      # Restore on Windows targeting the chosen RID
+      - name: Restore (Windows)
+        if: runner.os == 'Windows'
+        run: dotnet restore $env:Solution_Name --runtime ${{ matrix.rid }}
 
-      - name: Publish single-file app
+      # On macOS, only validate restore with Windows targeting enabled. Build is Windows-only (WPF).
+      - name: Restore (macOS)
+        if: runner.os == 'macOS'
+        run: dotnet restore "${{ env.Solution_Name }}" -p:EnableWindowsTargeting=true
+
+      # Build with Visual Studio MSBuild on Windows (required for ResolveComReference)
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration
+
+      # Publish single-file, self-contained app on Windows
+      - name: Publish (Windows)
+        if: runner.os == 'Windows'
         run: >
-          dotnet publish "${{ env.Project_Path }}"
-          -c "${{ env.Configuration }}"
-          -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeAllContentForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true
-          -p:PublishDir=publish/Release/${{ matrix.rid }}
+          msbuild $env:Project_Path /t:Publish
+          /p:Configuration=$env:Configuration
+          /p:RuntimeIdentifier=${{ matrix.rid }}
+          /p:SelfContained=true
+          /p:PublishSingleFile=true
+          /p:IncludeAllContentForSelfExtract=true
+          /p:EnableCompressionInSingleFile=true
+          /p:PublishDir=publish\Release\${{ matrix.rid }}
 
-      - name: Get tag or commit message
-        shell: bash
-        run: |
-          git fetch --tags --force
-          TAG_MSG="$(git for-each-ref refs/tags/${{ github.ref_name }} --format="%(contents)")"
-          if [ -z "$TAG_MSG" ]; then
-            TAG_MSG="$(git log -1 --pretty=%B)"
-          fi
-          {
-            echo "TAG_MSG<<EOF"
-            echo "$TAG_MSG"
-            echo "EOF"
-          } >> $GITHUB_ENV
-
-      - name: Upload publish folder
+      - name: Upload publish folder (Windows)
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: symphonia-${{ matrix.rid }}
