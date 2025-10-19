@@ -65,11 +65,24 @@ namespace Symphonia
             // Attach HwndSource hook to receive WM_APPCOMMAND
             Loaded += (_, __) =>
             {
-                var interopHelper = new WindowInteropHelper(this);
-                HwndSource source = HwndSource.FromHwnd(interopHelper.Handle);
-                if (source != null)
+                try
                 {
-                    source.AddHook(HwndHook);
+                    var interopHelper = new WindowInteropHelper(this);
+                    var handle = interopHelper.Handle;
+                    if (handle == IntPtr.Zero)
+                    {
+                        return;
+                    }
+
+                    HwndSource source = HwndSource.FromHwnd(handle);
+                    if (source != null)
+                    {
+                        source.AddHook(HwndHook);
+                    }
+                }
+                catch
+                {
+                    // Ignore hook failures in non-standard environments
                 }
             };
         }
@@ -543,6 +556,11 @@ namespace Symphonia
 
         private void UpdateTaskbarThumbButtons()
         {
+            if (!IsLoaded)
+            {
+                return;
+            }
+
             var taskbarInfo = this.TaskbarItemInfo;
             if (taskbarInfo == null)
             {
@@ -550,24 +568,31 @@ namespace Symphonia
             }
 
             // Sync play/pause button icon and description
-            var isPausedOrInvalid = IsPausedOrNotValid;
-            var buttons = taskbarInfo.ThumbButtonInfos;
-            if (buttons == null || buttons.Count < 3)
+            try
             {
-                return;
+                var isPausedOrInvalid = IsPausedOrNotValid;
+                var buttons = taskbarInfo.ThumbButtonInfos;
+                if (buttons == null || buttons.Count < 3)
+                {
+                    return;
+                }
+
+                var prev = buttons[0];
+                var playPause = buttons[1];
+                var next = buttons[2];
+
+                playPause.ImageSource = new BitmapImage(new Uri(isPausedOrInvalid ? "/images/play.png" : "/images/pause.png", UriKind.Relative));
+                playPause.Description = isPausedOrInvalid ? "Play" : "Pause";
+
+                bool active = IsPaused || IsPlaying;
+                prev.IsEnabled = active;
+                next.IsEnabled = active;
+                playPause.IsEnabled = active;
             }
-
-            var prev = buttons[0];
-            var playPause = buttons[1];
-            var next = buttons[2];
-
-            playPause.ImageSource = new BitmapImage(new Uri(isPausedOrInvalid ? "/images/play.png" : "/images/pause.png", UriKind.Relative));
-            playPause.Description = isPausedOrInvalid ? "Play" : "Pause";
-
-            bool active = IsPaused || IsPlaying;
-            prev.IsEnabled = active;
-            next.IsEnabled = active;
-            playPause.IsEnabled = active;
+            catch
+            {
+                // Ignore taskbar sync issues during early startup or unsupported environments
+            }
         }
 
         // Taskbar thumbnail toolbar button click handlers
