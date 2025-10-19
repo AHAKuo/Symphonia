@@ -31,6 +31,7 @@ namespace Symphonia
     {
         // WM_APPCOMMAND support for media keys
         private const int WM_APPCOMMAND = 0x0319;
+        private const int WM_HOTKEY = 0x0312;
         private const int APPCOMMAND_MEDIA_NEXTTRACK = 11;
         private const int APPCOMMAND_MEDIA_PREVIOUSTRACK = 12;
         private const int APPCOMMAND_MEDIA_STOP = 13;
@@ -39,6 +40,28 @@ namespace Symphonia
         private const int APPCOMMAND_MEDIA_PAUSE = 47;
         private const int APPCOMMAND_MEDIA_FAST_FORWARD = 49;
         private const int APPCOMMAND_MEDIA_REWIND = 50;
+
+        // Global hotkey IDs
+        private const int HOTKEY_ID_PLAY_PAUSE = 1001;
+        private const int HOTKEY_ID_NEXT = 1002;
+        private const int HOTKEY_ID_PREV = 1003;
+        private const int HOTKEY_ID_STOP = 1004;
+        private const int HOTKEY_ID_FF = 1005;
+        private const int HOTKEY_ID_RW = 1006;
+
+        // Virtual-key codes for media keys
+        private const uint VK_MEDIA_NEXT_TRACK = 0xB0;
+        private const uint VK_MEDIA_PREV_TRACK = 0xB1;
+        private const uint VK_MEDIA_STOP = 0xB2;
+        private const uint VK_MEDIA_PLAY_PAUSE = 0xB3;
+        private const uint VK_MEDIA_FAST_FORWARD = 0xB4; // may not be available on all keyboards
+        private const uint VK_MEDIA_REWIND = 0xB5;       // may not be available on all keyboards
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
         #region Tracking Bools
 
         #endregion
@@ -79,6 +102,9 @@ namespace Symphonia
                     {
                         source.AddHook(HwndHook);
                     }
+
+                    // Register global media hotkeys so keys work when minimized/unfocused
+                    RegisterGlobalMediaHotkeys(handle);
                 }
                 catch
                 {
@@ -709,6 +735,15 @@ namespace Symphonia
 
         private void Main_Closed(object sender, EventArgs e)
         {
+            try
+            {
+                var handle = new WindowInteropHelper(this).Handle;
+                if (handle != IntPtr.Zero)
+                {
+                    UnregisterGlobalMediaHotkeys(handle);
+                }
+            }
+            catch { }
             System.Windows.Application.Current.Shutdown();
         }
 
@@ -763,7 +798,68 @@ namespace Symphonia
                 }
             }
 
+            if (msg == WM_HOTKEY)
+            {
+                int id = wParam.ToInt32();
+                switch (id)
+                {
+                    case HOTKEY_ID_PLAY_PAUSE:
+                        PauseOrPlay(UpdateAll);
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_NEXT:
+                        NextSong();
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_PREV:
+                        PreviousSong();
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_STOP:
+                        if (IsPlaying) { PauseCurrentMusic(UpdateAll); }
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_FF:
+                        SeekBySeconds(10);
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_RW:
+                        SeekBySeconds(-10);
+                        handled = true;
+                        break;
+                }
+            }
+
             return IntPtr.Zero;
+        }
+
+        private void RegisterGlobalMediaHotkeys(IntPtr handle)
+        {
+            try
+            {
+                // fsModifiers = 0 to capture bare media keys. Ignore failures silently.
+                RegisterHotKey(handle, HOTKEY_ID_PLAY_PAUSE, 0, VK_MEDIA_PLAY_PAUSE);
+                RegisterHotKey(handle, HOTKEY_ID_NEXT, 0, VK_MEDIA_NEXT_TRACK);
+                RegisterHotKey(handle, HOTKEY_ID_PREV, 0, VK_MEDIA_PREV_TRACK);
+                RegisterHotKey(handle, HOTKEY_ID_STOP, 0, VK_MEDIA_STOP);
+                RegisterHotKey(handle, HOTKEY_ID_FF, 0, VK_MEDIA_FAST_FORWARD);
+                RegisterHotKey(handle, HOTKEY_ID_RW, 0, VK_MEDIA_REWIND);
+            }
+            catch { }
+        }
+
+        private void UnregisterGlobalMediaHotkeys(IntPtr handle)
+        {
+            try
+            {
+                UnregisterHotKey(handle, HOTKEY_ID_PLAY_PAUSE);
+                UnregisterHotKey(handle, HOTKEY_ID_NEXT);
+                UnregisterHotKey(handle, HOTKEY_ID_PREV);
+                UnregisterHotKey(handle, HOTKEY_ID_STOP);
+                UnregisterHotKey(handle, HOTKEY_ID_FF);
+                UnregisterHotKey(handle, HOTKEY_ID_RW);
+            }
+            catch { }
         }
     }
 }
