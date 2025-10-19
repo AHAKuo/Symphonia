@@ -9,7 +9,8 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls.Primitives;
-using System.Windows.Forms;
+using WinForms = System.Windows.Forms;
+using Microsoft.Win32;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -263,12 +264,12 @@ namespace Symphonia
                 return;
             }
 
-            using FolderBrowserDialog folderBrowserDialog = new()
+            using WinForms.FolderBrowserDialog folderBrowserDialog = new()
             {
                 Description = "Select a folder to export your favorites"
             };
 
-            if (folderBrowserDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog() != WinForms.DialogResult.OK)
             {
                 return;
             }
@@ -294,7 +295,7 @@ namespace Symphonia
                 Multiselect = false
             };
 
-            if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            if (openFileDialog.ShowDialog() != true)
             {
                 return;
             }
@@ -418,12 +419,12 @@ namespace Symphonia
         private void SetMusicPath()
         {
             // then ask the user to browse for the music folder
-            FolderBrowserDialog folderBrowserDialog = new()
+            WinForms.FolderBrowserDialog folderBrowserDialog = new()
             {
                 Description = "Please select your music folder"
             };
 
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog() == WinForms.DialogResult.OK)
             {
                 var path = folderBrowserDialog.SelectedPath;
 
