@@ -288,7 +288,7 @@ namespace Symphonia
 
         private void ImportFavoriteSongs()
         {
-            using OpenFileDialog openFileDialog = new()
+            var openFileDialog = new OpenFileDialog()
             {
                 Title = "Select a Symphonia favorites file",
                 Filter = "Symphonia Favorites (*.symphofs)|*.symphofs",
