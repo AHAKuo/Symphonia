@@ -10,8 +10,17 @@ on:
   workflow_dispatch:   # optional: run manually too
 
 jobs:
-  release:
-    runs-on: windows-latest
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            mac_restore_only: true
     env:
       Solution_Name: Symphonia.sln
       Project_Path: Symphonia.csproj
@@ -28,57 +37,42 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Setup MSBuild
+      # Use full Visual Studio MSBuild on Windows so COMReference works
+      - name: Setup MSBuild (Windows)
+        if: runner.os == 'Windows'
         uses: microsoft/setup-msbuild@v2
 
-      # Ensure restore generates RID-specific assets even if csproj lacks <RuntimeIdentifiers>
-      - name: Restore (win-x64)
-        run: dotnet restore $env:Solution_Name --runtime win-x64
+      # Restore on Windows targeting the chosen RID
+      - name: Restore (Windows)
+        if: runner.os == 'Windows'
+        run: dotnet restore $env:Solution_Name --runtime ${{ matrix.rid }}
 
-      # Build
-      - name: Build
+      # On macOS, only validate restore with Windows targeting enabled. Build is Windows-only (WPF).
+      - name: Restore (macOS)
+        if: runner.os == 'macOS'
+        run: dotnet restore "${{ env.Solution_Name }}" -p:EnableWindowsTargeting=true
+
+      # Build with Visual Studio MSBuild on Windows (required for ResolveComReference)
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
         run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration
 
-      # Publish single-file, self-contained EXE
-      - name: Publish single-file EXE
+      # Publish single-file, self-contained app on Windows
+      - name: Publish (Windows)
+        if: runner.os == 'Windows'
         run: >
           msbuild $env:Project_Path /t:Publish
           /p:Configuration=$env:Configuration
-          /p:RuntimeIdentifier=win-x64
+          /p:RuntimeIdentifier=${{ matrix.rid }}
           /p:SelfContained=true
           /p:PublishSingleFile=true
           /p:IncludeAllContentForSelfExtract=true
           /p:EnableCompressionInSingleFile=true
-          /p:PublishDir=publish\Release
+          /p:PublishDir=publish\Release\${{ matrix.rid }}
 
-      # Find the produced .exe
-      - name: Locate exe
-        id: find_exe
-        shell: pwsh
-        run: |
-          $exe = Get-ChildItem -Path publish\Release -Filter *.exe -Recurse | Select-Object -First 1
-          if (-not $exe) { throw "No EXE found in publish\Release" }
-          echo "EXE_PATH=$($exe.FullName)" >> $env:GITHUB_ENV
-          echo "EXE_NAME=$($exe.Name)" >> $env:GITHUB_ENV
-
-      # Get Git ver tag Message
-      - name: Get tag or commit message
-        shell: bash
-        run: |
-          git fetch --tags --force
-          TAG_MSG="$(git for-each-ref refs/tags/${{ github.ref_name }} --format="%(contents)")"
-          if [ -z "$TAG_MSG" ]; then
-            TAG_MSG="$(git log -1 --pretty=%B)"
-          fi
-          {
-            echo "TAG_MSG<<EOF"
-            echo "$TAG_MSG"
-            echo "EOF"
-          } >> $GITHUB_ENV
-
-      # Upload artifacts
-      - name: Upload Artifact (optional)
+      - name: Upload publish folder (Windows)
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.EXE_NAME }}
-          path: ${{ env.EXE_PATH }}
+          name: symphonia-${{ matrix.rid }}
+          path: publish/Release/${{ matrix.rid }}/
