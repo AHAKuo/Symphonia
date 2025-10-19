@@ -1,4 +1,4 @@
-﻿using NAudio.Wave;
+using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Threading.Tasks;
@@ -116,6 +116,34 @@ namespace Symphonia.scripts
                 ResumeCurrentMusic(endAction);
                 return;
             }
+        }
+
+        /// <summary>
+        /// Seeks the current song by a relative offset in seconds.
+        /// Positive values move forward, negative values move backward.
+        /// </summary>
+        /// <param name="secondsOffset">The number of seconds to seek by.</param>
+        public static void SeekBySeconds(double secondsOffset)
+        {
+            if (!HasInited || CurrentPlayingFileReader == null)
+            {
+                return;
+            }
+
+            double newSeconds = CurrentPlayingFileReader.CurrentTime.TotalSeconds + secondsOffset;
+
+            if (newSeconds < 0)
+            {
+                newSeconds = 0;
+            }
+
+            double maxSeconds = CurrentSongDuration.TotalSeconds;
+            if (newSeconds > maxSeconds)
+            {
+                newSeconds = maxSeconds;
+            }
+
+            CurrentPlayingFileReader.CurrentTime = TimeSpan.FromSeconds(newSeconds);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using System.Windows.Interop;
 using static Symphonia.scripts.Config;
 using static Symphonia.scripts.Defaults;
 using static Symphonia.scripts.MusicPlayer;
@@ -27,6 +28,16 @@ namespace Symphonia
     /// </summary>
     public partial class MainWindow : Window
     {
+        // WM_APPCOMMAND support for media keys
+        private const int WM_APPCOMMAND = 0x0319;
+        private const int APPCOMMAND_MEDIA_NEXTTRACK = 11;
+        private const int APPCOMMAND_MEDIA_PREVIOUSTRACK = 12;
+        private const int APPCOMMAND_MEDIA_STOP = 13;
+        private const int APPCOMMAND_MEDIA_PLAY_PAUSE = 14;
+        private const int APPCOMMAND_MEDIA_PLAY = 46;
+        private const int APPCOMMAND_MEDIA_PAUSE = 47;
+        private const int APPCOMMAND_MEDIA_FAST_FORWARD = 49;
+        private const int APPCOMMAND_MEDIA_REWIND = 50;
         #region Tracking Bools
 
         #endregion
@@ -49,12 +60,24 @@ namespace Symphonia
             }); // load settings
 
             UpdateAll(); // update window with settings.
+
+            // Attach HwndSource hook to receive WM_APPCOMMAND
+            Loaded += (_, __) =>
+            {
+                var interopHelper = new WindowInteropHelper(this);
+                HwndSource source = HwndSource.FromHwnd(interopHelper.Handle);
+                if (source != null)
+                {
+                    source.AddHook(HwndHook);
+                }
+            };
         }
 
         private void InitPlayerEvents()
         {
             OnHasPlayed += UpdateAll;
             OnUpdate += UpdateSeekbar;
+            OnUpdate += UpdateTaskbarThumbButtons;
         }
 
         #region Inits
@@ -130,6 +153,7 @@ namespace Symphonia
             FavoriteConfigButton.Click += FavoriteConfigButton_Click;
             MusicControlButton_1.Click += (sender, e) => PauseOrPlay(UpdateAll);
             MusicControlButton_3.Click += (sender, e) => ShuffleAll();
+            // thumbar handlers are declared in XAML and implemented below
             SeekBar.Loaded += (sender, e) =>
             {
                 // Get the Track control from the Slider
@@ -440,6 +464,7 @@ namespace Symphonia
             UpdateVolume();
             UpdateConfigs();
             UpdateHeartIconForCurrentSong();
+            UpdateTaskbarThumbButtons();
         }
 
         private void UpdatePlayingLabel()
@@ -455,6 +480,7 @@ namespace Symphonia
             RepeatButtonIcon.Source = CurrentlyRepeating ? new BitmapImage(new Uri(pathToRepeatActive, UriKind.Relative)) : new BitmapImage(new Uri(pathToRepeatInActive, UriKind.Relative));
             MusicControlButton_2.Background = CurrentlyRepeating ? DefaultRepeatButtonColor : InactiveRepeatButtonColor;
             ToggleWindowModeIcon.Source = currentWindowMode == CurrentWindowMode.Collapsed ? new BitmapImage(new Uri(pathToExpand, UriKind.Relative)) : new BitmapImage(new Uri(pathToCollapsed, UriKind.Relative));
+            UpdateTaskbarThumbButtons();
         }
 
         private void UpdateControlsInteractivity()
@@ -512,6 +538,51 @@ namespace Symphonia
             SeekBar.Value = (normalizedPosition.TotalSeconds / CurrentSongDuration.TotalSeconds) * 10;
 
             UpdateTimestamp();
+        }
+
+        private void UpdateTaskbarThumbButtons()
+        {
+            var taskbarInfo = this.TaskbarItemInfo;
+            if (taskbarInfo == null)
+            {
+                return;
+            }
+
+            // Sync play/pause button icon and description
+            var isPausedOrInvalid = IsPausedOrNotValid;
+            var buttons = taskbarInfo.ThumbButtonInfos;
+            if (buttons == null || buttons.Count < 3)
+            {
+                return;
+            }
+
+            var prev = buttons[0];
+            var playPause = buttons[1];
+            var next = buttons[2];
+
+            playPause.ImageSource = new BitmapImage(new Uri(isPausedOrInvalid ? "/images/play.png" : "/images/pause.png", UriKind.Relative));
+            playPause.Description = isPausedOrInvalid ? "Play" : "Pause";
+
+            bool active = IsPaused || IsPlaying;
+            prev.IsEnabled = active;
+            next.IsEnabled = active;
+            playPause.IsEnabled = active;
+        }
+
+        // Taskbar thumbnail toolbar button click handlers
+        private void ThumbPrev_Click(object sender, EventArgs e)
+        {
+            PreviousSong();
+        }
+
+        private void ThumbPlayPause_Click(object sender, EventArgs e)
+        {
+            PauseOrPlay(UpdateAll);
+        }
+
+        private void ThumbNext_Click(object sender, EventArgs e)
+        {
+            NextSong();
         }
 
         private void UpdateSongTime()
@@ -618,6 +689,55 @@ namespace Symphonia
         private void Main_GotFocus(object sender, RoutedEventArgs e)
         {
             InputBoxField.Focus();
+        }
+
+        // Processes WM_APPCOMMAND for global media keys
+        private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_APPCOMMAND)
+            {
+                int cmd = (short)((((long)lParam) >> 16) & 0xFFFF);
+                switch (cmd)
+                {
+                    case APPCOMMAND_MEDIA_PLAY_PAUSE:
+                        PauseOrPlay(UpdateAll);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_PLAY:
+                        ResumeCurrentMusic(UpdateAll);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_PAUSE:
+                        PauseCurrentMusic(UpdateAll);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_NEXTTRACK:
+                        NextSong();
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                        PreviousSong();
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_STOP:
+                        if (IsPlaying)
+                        {
+                            PauseCurrentMusic(UpdateAll);
+                        }
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_FAST_FORWARD:
+                        SeekBySeconds(10);
+                        handled = true;
+                        break;
+                    case APPCOMMAND_MEDIA_REWIND:
+                        SeekBySeconds(-10);
+                        handled = true;
+                        break;
+                }
+            }
+
+            return IntPtr.Zero;
         }
     }
 }
