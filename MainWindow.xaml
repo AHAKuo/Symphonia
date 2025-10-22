@@ -1,4 +1,4 @@
-﻿<Window x:Name="Main" x:Class="Symphonia.MainWindow"
+<Window x:Name="Main" x:Class="Symphonia.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -115,7 +115,13 @@
                 </TextBox.BorderBrush>
             </TextBox>
 
-            <Label x:Name="PlayingMusicLabel" Grid.Row="3" Grid.Column="1" Content="A Contest of Aeons: Testing for Length" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="32" FontFamily="Times New Roman"/>
+            <Viewbox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform">
+                <Grid x:Name="PlayingMusicLabelContainer" ClipToBounds="True" Width="270" Height="64">
+                    <Canvas x:Name="PlayingMusicCanvas" ClipToBounds="True">
+                        <Label x:Name="PlayingMusicLabel" Content="A Contest of Aeons: Testing for Length" Foreground="White" FontSize="32" FontFamily="Times New Roman" Canvas.Left="0" Canvas.Top="0"/>
+                    </Canvas>
+                </Grid>
+            </Viewbox>
 
             <Label x:Name="Timestamp" Grid.Row="4" Grid.Column="1" Content="00:00:00" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="Auto" Width="Auto" FontSize="16" MinHeight="16"/>
 

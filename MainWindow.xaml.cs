@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
@@ -28,7 +28,7 @@ namespace Symphonia
     public partial class MainWindow : Window
     {
         #region Tracking Bools
-
+        private Storyboard scrollingStoryboard;
         #endregion
 
         public MainWindow()
@@ -447,6 +447,54 @@ namespace Symphonia
             PlayingMusicLabel.FontStyle = !HasInited ? FontStyles.Italic : FontStyles.Normal;
             PlayingMusicLabel.Content = !HasInited ? defaultMusicLabel : CurrentPlaylist.CurrentSong;
             PlayingMusicLabel.Foreground = !HasInited ? new SolidColorBrush(Colors.Gray) : new SolidColorBrush(Colors.White);
+            
+            // Update scrolling animation
+            Dispatcher.BeginInvoke(new Action(() => UpdateScrollingAnimation()), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+        
+        private void UpdateScrollingAnimation()
+        {
+            // Stop any existing animation
+            scrollingStoryboard?.Stop();
+            scrollingStoryboard = null;
+            
+            // Reset position
+            Canvas.SetLeft(PlayingMusicLabel, 0);
+            
+            // Force measure to get actual text width
+            PlayingMusicLabel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double textWidth = PlayingMusicLabel.DesiredSize.Width;
+            double containerWidth = PlayingMusicLabelContainer.ActualWidth;
+            
+            // Only scroll if text is wider than container
+            if (textWidth > containerWidth && containerWidth > 0)
+            {
+                // Create scrolling animation
+                scrollingStoryboard = new Storyboard();
+                scrollingStoryboard.RepeatBehavior = RepeatBehavior.Forever;
+                
+                var scrollAnimation = new DoubleAnimationUsingKeyFrames();
+                
+                // Start position (centered or from right)
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(containerWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0))));
+                
+                // Pause at start
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(containerWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2))));
+                
+                // Scroll to the left
+                double scrollDistance = textWidth + containerWidth;
+                double scrollDuration = scrollDistance / 50; // 50 pixels per second
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(-textWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2 + scrollDuration))));
+                
+                // Pause at end
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(-textWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(4 + scrollDuration))));
+                
+                Storyboard.SetTarget(scrollAnimation, PlayingMusicLabel);
+                Storyboard.SetTargetProperty(scrollAnimation, new PropertyPath("(Canvas.Left)"));
+                
+                scrollingStoryboard.Children.Add(scrollAnimation);
+                scrollingStoryboard.Begin();
+            }
         }
 
         private void UpdateImages()
@@ -612,6 +660,10 @@ namespace Symphonia
 
         private void Main_Closed(object sender, EventArgs e)
         {
+            // Stop scrolling animation
+            scrollingStoryboard?.Stop();
+            scrollingStoryboard = null;
+            
             System.Windows.Application.Current.Shutdown();
         }
 
