@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Symphonia.Dialogs;
 using Symphonia.external;
 using Symphonia.scripts;
@@ -252,7 +252,13 @@ namespace Symphonia
             string fileName = $"favorites_{DateTime.Now:yyyyMMdd_HHmmss}.symphofs";
             string filePath = Path.Combine(folderBrowserDialog.SelectedPath, fileName);
 
-            File.WriteAllLines(filePath, FavoriteSongs.OrderBy(song => song));
+            // Export in new format with song|||album separator
+            var exportLines = FavoriteSongs
+                .OrderBy(song => song.SongName)
+                .ThenBy(song => song.AlbumName)
+                .Select(song => song.ToString());
+            
+            File.WriteAllLines(filePath, exportLines);
 
             System.Windows.MessageBox.Show(
                 $"Favorites exported successfully to:\n{filePath}",
@@ -291,9 +297,11 @@ namespace Symphonia
                 return;
             }
 
+            // Parse imported favorites with backward compatibility
             var importedFavorites = importedLines
                 .Select(line => line.Trim())
                 .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Select(line => FavoriteSong.FromString(line))
                 .ToList();
 
             if (importedFavorites.Count == 0)
@@ -318,11 +326,11 @@ namespace Symphonia
 
             if (importModeDialog.SelectedMode == FavoriteImportMode.Overwrite)
             {
-                FavoriteSongs = new HashSet<string>(importedFavorites);
+                FavoriteSongs = new HashSet<FavoriteSong>(importedFavorites);
             }
             else if (importModeDialog.SelectedMode == FavoriteImportMode.Expand)
             {
-                foreach (string song in importedFavorites)
+                foreach (var song in importedFavorites)
                 {
                     FavoriteSongs.Add(song);
                 }
@@ -356,6 +364,17 @@ namespace Symphonia
         }
 
         /// <summary>
+        /// Gets the album name for the current song
+        /// </summary>
+        private string GetCurrentSongAlbumName()
+        {
+            if (!HasInited || string.IsNullOrEmpty(CurrentPlaylist.CurrentSongFilePath))
+                return "Unknown Album";
+
+            return Config.GetAlbumNameFromFile(CurrentPlaylist.CurrentSongFilePath);
+        }
+
+        /// <summary>
         /// Toggles the current song's favorite status and updates the heart icon
         /// </summary>
         private void ToggleCurrentSongFavorite()
@@ -364,7 +383,8 @@ namespace Symphonia
                 return;
 
             string currentSongName = CurrentPlaylist.CurrentSong;
-            bool isNowFavorite = ToggleFavorite(currentSongName);
+            string currentAlbumName = GetCurrentSongAlbumName();
+            bool isNowFavorite = ToggleFavorite(currentSongName, currentAlbumName);
             
             // Update heart icon visual state
             UpdateHeartIcon(isNowFavorite);
@@ -605,7 +625,8 @@ namespace Symphonia
             }
 
             string currentSongName = CurrentPlaylist.CurrentSong;
-            bool isFavorite = IsFavorite(currentSongName);
+            string currentAlbumName = GetCurrentSongAlbumName();
+            bool isFavorite = IsFavorite(currentSongName, currentAlbumName);
             UpdateHeartIcon(isFavorite);
         }
         #endregion

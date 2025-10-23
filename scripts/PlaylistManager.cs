@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -166,15 +166,21 @@ namespace Symphonia.scripts
 
             List<string> musicFiles = new();
             // Check if we should try to play a favorite song (30% chance)
-            string favoriteSong = GetRandomFavoriteSong();
+            var favoriteSong = GetRandomFavoriteSong();
             if (favoriteSong != null && rand.Next(100) < 30) // 30% chance to play a favorite
             {
                 // Try to find the favorite song in the music folder
                 musicFiles = supportedFormats.SelectMany(format => Directory.GetFiles(PathToMusicFolder, format, SearchOption.AllDirectories))
                                                  .ToList();
 
+                // Match by both song name and album name
                 var favoriteSongPath = musicFiles.FirstOrDefault(file => 
-                    Path.GetFileNameWithoutExtension(file).Equals(favoriteSong, StringComparison.OrdinalIgnoreCase));
+                {
+                    string songName = Path.GetFileNameWithoutExtension(file);
+                    string albumName = GetAlbumNameFromFile(file);
+                    return songName.Equals(favoriteSong.SongName, StringComparison.OrdinalIgnoreCase) &&
+                           albumName.Equals(favoriteSong.AlbumName, StringComparison.OrdinalIgnoreCase);
+                });
 
                 if (favoriteSongPath != null)
                 {
