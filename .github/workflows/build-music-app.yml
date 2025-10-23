@@ -6,8 +6,11 @@ permissions:
 on:
   push:
     tags:
-      - 'v*'         
-  workflow_dispatch:   # optional: run manually too
+      - 'v*'          # release tags
+  pull_request:
+    branches:
+      - '*'           # any PR branch
+  workflow_dispatch:   # optional manual trigger
 
 jobs:
   build:
