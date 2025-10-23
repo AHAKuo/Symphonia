@@ -459,9 +459,6 @@ namespace Symphonia
             scrollingStoryboard?.Stop();
             scrollingStoryboard = null;
             
-            // Reset position
-            Canvas.SetLeft(PlayingMusicLabel, 0);
-            
             // Force measure to get actual text width
             PlayingMusicLabel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             double textWidth = PlayingMusicLabel.DesiredSize.Width;
@@ -476,25 +473,36 @@ namespace Symphonia
                 
                 var scrollAnimation = new DoubleAnimationUsingKeyFrames();
                 
-                // Start position (centered or from right)
-                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(containerWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0))));
+                // Start position: centered
+                double startPos = (containerWidth - textWidth) / 2;
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(startPos, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0))));
                 
-                // Pause at start
-                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(containerWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2))));
+                // Pause at start (show centered text)
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(startPos, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2))));
                 
-                // Scroll to the left
-                double scrollDistance = textWidth + containerWidth;
+                // Scroll to the left until end is visible
+                double endPos = containerWidth - textWidth;
+                double scrollDistance = startPos - endPos;
                 double scrollDuration = scrollDistance / 50; // 50 pixels per second
-                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(-textWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2 + scrollDuration))));
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(endPos, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(2 + scrollDuration))));
                 
                 // Pause at end
-                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(-textWidth, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(4 + scrollDuration))));
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(endPos, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(4 + scrollDuration))));
+                
+                // Return to start position
+                scrollAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(startPos, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(4.5 + scrollDuration))));
                 
                 Storyboard.SetTarget(scrollAnimation, PlayingMusicLabel);
                 Storyboard.SetTargetProperty(scrollAnimation, new PropertyPath("(Canvas.Left)"));
                 
                 scrollingStoryboard.Children.Add(scrollAnimation);
                 scrollingStoryboard.Begin();
+            }
+            else
+            {
+                // Text fits: center it
+                double centerPos = (containerWidth - textWidth) / 2;
+                Canvas.SetLeft(PlayingMusicLabel, centerPos);
             }
         }
 
